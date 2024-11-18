@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-
 # Welcome to your CDK Python project!
 
 This is a blank project for CDK development with Python.
@@ -60,4 +58,3 @@ Enjoy!
 =======
 # pointless-analogies
 test text
->>>>>>> d26f1ff87cd6c9df89192215693802553c221a72
