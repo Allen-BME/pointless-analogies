@@ -3,11 +3,11 @@ import os
 
 import aws_cdk as cdk
 
-from cdk_blank.cdk_blank_stack import CdkBlankStack
+from pointless_analogies.pointless_analogies_stack import PointlessAnalogiesStack
 
 
 app = cdk.App()
-CdkBlankStack(app, "CdkBlankStack",
+PointlessAnalogiesStack(app, "PointlessAnalogiesStack",
     # If you don't specify 'env', this stack will be environment-agnostic.
     # Account/Region-dependent features and context lookups will not work,
     # but a single synthesized template can be deployed anywhere.
