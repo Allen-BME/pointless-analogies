@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 # Welcome to your CDK Python project!
 
@@ -56,3 +57,7 @@ command.
  * `cdk docs`        open CDK documentation
 
 Enjoy!
+=======
+# pointless-analogies
+test text
+>>>>>>> d26f1ff87cd6c9df89192215693802553c221a72
