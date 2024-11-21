@@ -91,3 +91,7 @@ Suppose you want to add a feature to the code. This is the process you would fol
 *In the unlikely case that any changes were made to the remote repository since you started rebasing (which you find out through* `git pull`*), return to rebasing.*
 `git merge <BRANCH NAME>`
 `git push`
+
+## Fork and commit guide
+I personally found the steps on this repo helpful.
+https://github.com/firstcontributions/first-contributions
