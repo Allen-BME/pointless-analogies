@@ -17,7 +17,7 @@ class PointlessAnalogiesStack(Stack):
         # Add S3 Bucket to stack
         image_bucket = s3.Bucket(
             self,
-            "PA_Images",  # Picture bucket name
+            "PA_Images",  # Picture bucket ID
             versioned=False,  # Do not allow multiple versions of the same file
             # Turn off blocks for public access. May want to change for final implementation
             block_public_access=s3.BlockPublicAccess(
@@ -29,7 +29,7 @@ class PointlessAnalogiesStack(Stack):
             public_read_access=True,  # Pictures are publicly accessible
             removal_policy=RemovalPolicy.DESTROY,  # Delete all pictures when stack is deleted
             auto_delete_objects=True,  # Auto-delete images when stack is deleted
-            bucket_name="pointless-analogies-images"
+            bucket_name="pointless-analogies-images"  # Picture bucket name
         )
 
         web_bucket = s3.Bucket(
@@ -46,7 +46,7 @@ class PointlessAnalogiesStack(Stack):
             public_read_access=True,  # Web content is publicly accessible
             removal_policy=RemovalPolicy.DESTROY,  # Delete all web content when stack is deleted
             auto_delete_objects=True,  # Auto-delete images when stack is destroyed
-            bucket_name="pointless-analogies-web-content"
+            bucket_name="pointless-analogies-web-content"  # Web content bucket name
         )
 
         # Add Lambda function that serves as site index
