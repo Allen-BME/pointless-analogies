@@ -15,7 +15,7 @@ class PointlessAnalogiesStack(Stack):
         super().__init__(scope, construct_id, **kwargs)
 
         # Add S3 Bucket to stack
-        bucket = s3.Bucket(
+        image_bucket = s3.Bucket(
             self,
             "PA_Images",  # Picture bucket name
             versioned=False,  # Do not allow multiple versions of the same file
@@ -45,7 +45,7 @@ class PointlessAnalogiesStack(Stack):
             # Add the bucket name to the environment.
             # This is needed as the bucket name that cdk generates is random
             environment={
-                "BUCKET_NAME": bucket.bucket_name 
+                "BUCKET_NAME": image_bucket.bucket_name 
             }
         )
 
@@ -59,13 +59,13 @@ class PointlessAnalogiesStack(Stack):
         )
 
         # Grant read access for the image bucket to the index lambda
-        bucket.grant_read(test_fun)
+        image_bucket.grant_read(test_fun)
 
         # Create a policy that gives the ability to list bucket contents of the
         # image bucket
         list_bucket_policy = iam.PolicyStatement(
             actions=["s3:ListBucket"],  # Allowed actions...
-            resources=[bucket.bucket_arn]  # for this bucket
+            resources=[image_bucket.bucket_arn]  # for this bucket
         )
 
         # Add the defined policy to the lambda function
