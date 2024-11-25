@@ -6,10 +6,19 @@ This document provides the Git workflow we will use for the Pointless Analogies 
 
 Before setting up, it is vitally important to know that Git does not store versions of files - **it stores individual changes made to files in the repository.** Different versions of files are then constructed from the history of changes.
 
-### Clone the repository
+### Set up Git and the GitHub CLI
 
-`git clone https://github.com/Allen-BME/pointless-analogies`
-This creates a new directory at your current location called *pointless-analogies*. Within this directory is a copy of everything in the repository on GitHub at the time. There is also a hidden directory within *pointless-analogies* which contains all the information needed by Git for versioning, branching, connection with the remote repository, and anything else Git needs.
+You can download Git using whatever package manager you prefer, and the steps for downloading the GitHub CLI can be found [here](https://cli.github.com/manual/).
+
+### (Optional) Set up the ssh-agent
+
+Although not necessary, setting up the ssh-agent will allow you to only type in the passphrase for your SSH key once per terminal session, which can be very convenient for performing lots of remote actions. Instructions can be found [here](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent?platform=linux). Once set up you will need to manually re-activate the ssh-agent every terminal session, which can be done with `eval $(ssh-agent)` followed by `ssh-add`.
+
+### Fork the repository
+
+`gh fork Allen-BME/pointless-analogies`
+
+This creates a new repository called *pointless-analogies* under your GitHub account which derives from the main repository. **You will also be given an option to create a local clone of your forked repo, which you should do.** You can do this afterwards if you so choose. In your local directory is a copy of everything in your forked repo on GitHub at the time, which should be the same as what is in the main repo at the time. There is also a hidden directory within *pointless-analogies* which contains all the information needed by Git for versioning, branching, connection with the remote repository, and anything else Git needs.
 
 ## Editing
 
