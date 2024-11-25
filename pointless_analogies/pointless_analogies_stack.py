@@ -28,7 +28,25 @@ class PointlessAnalogiesStack(Stack):
             ),
             public_read_access=True,  # Pictures are publicly accessible
             removal_policy=RemovalPolicy.DESTROY,  # Delete all pictures when stack is deleted
-            auto_delete_objects=True  # Auto-delete images when stack is deleted
+            auto_delete_objects=True,  # Auto-delete images when stack is deleted
+            bucket_name="pointless-analogies-images"
+        )
+
+        web_bucket = s3.Bucket(
+            self,
+            "PA_Web_Content",  # Web content bucket ID
+            versioned=False,  # Do not allow multiple versions of the same file
+            #Turn off blocks for public access. May want to change for final implementation
+            block_public_access=s3.BlockPublicAccess(
+                block_public_acls=False,
+                block_public_policy=False,
+                ignore_public_acls=False,
+                restrict_public_buckets=False
+            ),
+            public_read_access=True,  # Web content is publicly accessible
+            removal_policy=RemovalPolicy.DESTROY,  # Delete all web content when stack is deleted
+            auto_delete_objects=True,  # Auto-delete images when stack is destroyed
+            bucket_name="pointless-analogies-web-content"
         )
 
         # Add Lambda function that serves as site index
