@@ -2,5 +2,5 @@
 
 cd images/
 for IMAGE in *; do 
-    aws s3 cp $IMAGE s3://PA_Images/$IMAGE
+    aws s3 cp $IMAGE s3://pointless-analogies-mages/$IMAGE
 done
