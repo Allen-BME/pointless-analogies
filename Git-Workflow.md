@@ -30,27 +30,37 @@ You can directly edit the files in your *pointless-analogies* directory using wh
 
 This updates the main branch in your forked repository on GitHub with any changes made to the main branch in the source repository. You can optionally add the `-b <BRANCH NAME>` flag to specify a specific branch in your fork and the source to sync. This command does **not** update your local repository, only the one on GitHub.
 
-### Pull any changes
+### Fetch any changes
 
-`git pull`
-This updates your local repository with all the changes made to your remote repository, which is your forked repo. Secretly it is a combination of `git fetch`, which grabs changes made to the remote repository, and `git merge`, which merges these changes with your local repository. **This should be run each time before you do something with the main branch**, whether creating a branch or merging it.
+`git fetch origin`
 
-### Create a branch
+Git stores the addresses of all remote repositories associated with your local repository. `origin` is the name of the repo the local repository was cloned from, and is the default for most remote operations. This command retrieves all the changes made to the main branch at the origin and puts them in the local branch `origin/main`.
 
-`git branch <BRANCH NAME>`
-This creates a new branch of development from the branch you are currently on. Any changes made on this branch are completely independent of any other branch, which makes it ideal to develop and test new features without breaking the main branch's functionality at any point. The branch name can be anything, but it's best to make it descriptive to the feature you're trying to add. **All code should be written in a branch dedicated to the feature you're adding. Code should never be written in the main branch.**
+### Merge the remote changes
 
-### Go to a branch
+`git merge origin/main`
 
-`git checkout <BRANCH NAME>`
-This changes the branch you are currently working on to the target branch, which updates all the files in your directory with changes from that branch. You haven't changed your directory, Git has just edited all the files in it to match the files in your new working branch.
+This attempts to combine your current branch and the `origin/main` branch into a new commit on your current branch. There are two types of merges:
 
-**Shortcut:** `git checkout -b <BRANCH NAME>`
-This both creates a new branch and changes your target branch to that new branch.
+1. **Fast-Forward Merge:** Any two branches will always share some common ancestor. If your branch hasn't changed since that common ancestor, then it's very easy to combine the two; Only one branch has any changes! Your branch just becomes the branch you were merging with - same data and everything. If you imagine the most recent commit on your branch as a pointer to a node in a tree, your branch just now points to the same node as the branch you were merging with. **Fast-Forward Merges cannot have merge conflicts.**
+2. **Merge Commit:** If both branches have been changed since their most recent common ancestor, then Git creates a new commit on your branch with the changes from the most recent commits of both branches. Git does its best to combine the changes smoothly, but sometimes it runs into a **merge conflict** (more details below).
+
+**Shortcut:** `git pull origin`
+
+This runs both `git fetch origin` and `git merge origin/main`.
+
+### Rebase your branch
+
+`git rebase <BRANCH NAME>`
+
+This is an alternative way to combine changes from two branches. Instead of combining the two most recent commits from both branches, `git rebase` finds the most recent common ancestor of the two branches (called the **base**) and creates a list of every change to each branch since then. It then tries to apply each change to the base **in the order in which they were made.** Merge conflicts can still occur for conflicting individual changes, but it's much clearer which change was made when and which order to resolve the change in. The end result of this command is that your branch's commit history is erased and **your branch's base is now the most recent commit of the branch you were rebasing with**, which makes it ripe for the other branch to perform a fast-forward merge with your branch. This is fantastic for adding the changes from the main branch to a feature branch, but because it erases commit history, **`git rebase` should never be used when on a branch that any other branches have been made from**.
+
+**Shortcut:** `git pull origin` can still be used for `git rebase` if the default behavior is set to rebase, which can be done with `git config pull.rebase true`.
 
 ### Stage your changes
 
 `git add <FILE NAME>`
+
 This "stages" any changes to files you add, which essentially tells Git "these are the files I've finished changing and am ready to commit". You can add any number of files you want, either by separate `git add` commands or one after the other in the same command, and can even add all the files in your directory with the `--all` or `-A` flags. However, **adding a file does not update your branch** - it just tells Git that you will use this file to change the branch later. Also, files are added as is, meaning that if you modify any added files before committing, the additional modifications you made will **not** be committed.
 
 ### Commit your changes
@@ -61,28 +71,18 @@ This command takes every change you've added with `git add` and actually modifie
 **Shortcut:** `git commit -a -m "<COMMIT MESSAGE>"`
 This adds all the files in your directory and commits them at the same time.
 
-### Merge your branch
+### Keep your branch up to date
 
-`git merge <BRANCH NAME>`
-This attempts to combine your current branch and the branch you specify into a new commit on your current branch. There are two types of merges:
+Using the same sync, fetch, and merge/rebase commands as before, you should update your local main branch with any changes from the source repo **before every push operation**. A good practice is to also update your local main branch after every commit, although this is not required.
 
-1. **Fast-Forward Merge:** Any two branches will always share some common ancestor. If your branch hasn't changed since that common ancestor, then it's very easy to combine the two; Only one branch has any changes! Your branch just becomes the branch you were merging with - same data and everything. If you imagine the most recent commit on your branch as a pointer to a node in a tree, your branch just now points to the same node as the branch you were merging with. **Fast-Forward Merges cannot have merge conflicts.**
+## Making a pull request
 
-2. **Merge Commit:** If both branches have been changed since their most recent common ancestor, then Git creates a new commit on your branch with the changes from the most recent commits of both branches. Git does its best to combine the changes smoothly, but sometimes it runs into a **merge conflict** (more details below).
+There are two conditions which should **always** be met before making a pull request:
 
-### Rebase your branch
+1. **Your forked repo's main branch is up-to-date with your changes and any changes to the source repo.** That means if anyone has pushed anything to the repo after you began development, you've already synced those changes to your forked repo, fetched those changes to your local repo, and rebased your main branch with them. You've also run `git push` from within your main branch to push your changes to your forked repo.
+2. **Your code has been fully tested.** The idea is that the main branch on the source repo should always work perfectly, and only when you've made sure your code also works perfectly should you make a pull request. You don't have to develop all on your own, though. If you need to push your unfinished code because you need help, you can create a new branch with `git checkout -b <BRANCH NAME>` and push that branch to your forked repo with `git push --set-upstream origin <BRANCH NAME>` from within your new branch. After that, `git push` and `git pull` will push and pull changes to and from your new remote branch when run within that branch, just like they do within the main branch.
 
-`git rebase <BRANCH NAME>`
-This is an alternative way to combine changes from two branches. Instead of combining the two most recent commits from both branches, `git rebase` finds the most recent common ancestor of the two branches (called the **base**) and creates a list of every change to each branch since then. It then tries to apply each change to the base **in the order in which they were made.** Merge conflicts can still occur for conflicting individual changes, but it's much clearer which change was made when and which order to resolve the change in. The end result of this command is that your branch's commit history is erased and **your branch's base is now the most recent commit of the branch you were rebasing with**, which makes it ripe for the other branch to perform a fast-forward merge with your branch. This is fantastic for adding the changes from the main branch to a feature branch, but because it erases commit history **`git rebase` should never be used when on the main branch**, since someone may have created a branch from one of the main branch's now deleted commits.
-
-## Pushing to the Remote Repository
-
-There are two conditions which should **always** be met before pushing to the remote repository:
-
-1. **Your main branch is up-to-date with any changes to the remote repo.** That means if anyone has pushed anything to the repo after you began development, you've already pulled those changes, rebased your feature branch with them, and merged your main branch with your feature branch.
-2. **Your code has been fully tested.** The idea is that the main branch on the remote repo should always work perfectly, and only when you've made sure your code also works perfectly should you push it to the main branch. You don't have to develop all on your own, though. If you need to push your unfinished branch because you need help, you can run `git push --set-upstream origin <BRANCH NAME>` from within your feature branch to push just that branch to the remote repo. After that, `git push` and `git pull` will push and pull changes to and from your remote feature branch when run within that branch, just like they do within the main branch.
-
-Once both conditions have been met, you can run `git push` from your main branch to push your changes to the remote repository.
+Once both conditions have been met, you can run `TBD` from your main branch to push your changes to the remote repository.
 
 ## Merge Conflicts
 
