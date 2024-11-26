@@ -56,4 +56,3 @@ command.
  * `cdk docs`        open CDK documentation
 
 Enjoy!
-test edit
