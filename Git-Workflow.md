@@ -24,10 +24,16 @@ This creates a new repository called *pointless-analogies* under your GitHub acc
 
 You can directly edit the files in your *pointless-analogies* directory using whatever code editor you choose. As far as code editing is concerned, this is just a normal directory. However, there are some specific ways we will be editing our files to make sure we don't overwrite each other's code.
 
+### Update your forked repository
+
+`gh repo sync <YOUR FORKED REPO NAME>`
+
+This updates the main branch in your forked repository on GitHub with any changes made to the main branch in the source repository. You can optionally add the `-b <BRANCH NAME>` flag to specify a specific branch in your fork and the source to sync. This command does **not** update your local repository, only the one on GitHub.
+
 ### Pull any changes
 
 `git pull`
-This updates your local repository with all the changes made to the remote repository. Secretly it is a combination of `git fetch`, which grabs changes made to the remote repository, and `git merge`, which merges these changes with your local repository. **This should be run every time you do something with the main branch**, whether creating a branch or merging it.
+This updates your local repository with all the changes made to your remote repository, which is your forked repo. Secretly it is a combination of `git fetch`, which grabs changes made to the remote repository, and `git merge`, which merges these changes with your local repository. **This should be run each time before you do something with the main branch**, whether creating a branch or merging it.
 
 ### Create a branch
 
@@ -86,9 +92,12 @@ When Git detects a merge conflict, it pauses the merging process and adds some t
 
 ## Simplified Workflow
 
-Suppose you want to add a feature to the code. This is the process you would follow:
+Suppose you want to add a feature to the code. This is the process you would follow, assuming you've already set up your fork and local repository:
+
+`gh repo sync <YOUR FORKED REPO NAME>`
 
 `git pull`
+
 `git checkout -b <BRANCH NAME>`
 *Edit the code, run tests, etc.*
 `git commit -a -m "<COMMIT MESSAGE>"`
