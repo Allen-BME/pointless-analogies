@@ -82,7 +82,9 @@ There are two conditions which should **always** be met before making a pull req
 1. **Your forked repo's main branch is up-to-date with your changes and any changes to the source repo.** That means if anyone has pushed anything to the repo after you began development, you've already synced those changes to your forked repo, fetched those changes to your local repo, and rebased your main branch with them. You've also run `git push` from within your main branch to push your changes to your forked repo.
 2. **Your code has been fully tested.** The idea is that the main branch on the source repo should always work perfectly, and only when you've made sure your code also works perfectly should you make a pull request. You don't have to develop all on your own, though. If you need to push your unfinished code because you need help, you can create a new branch with `git checkout -b <BRANCH NAME>` and push that branch to your forked repo with `git push --set-upstream origin <BRANCH NAME>` from within your new branch. After that, `git push` and `git pull` will push and pull changes to and from your new remote branch when run within that branch, just like they do within the main branch.
 
-Once both conditions have been met, you can run `TBD` from your main branch to push your changes to the remote repository.
+Once both conditions have been met, you can run `gh pr create --title "<TITLE OF PULL REQUEST>" --body "<DETAILS OF PULL REQUEST>"` from your main branch to create a pull request from the source repo. The `--title` and `--body` flags can be left out and the GitHub CLI will interactively ask for this information. Alternatively, you can use the flag `--fill` to automatically generate the title and body from your commits.
+
+To merge the pull request, go to the source repo (`Allen-BME/pointless-analogies`) in a web browser, go to pull requests, and merge your pull request. There shouldn't be any merge conflicts if you followed all the previous steps.
 
 ## Merge Conflicts
 
@@ -96,20 +98,20 @@ Suppose you want to add a feature to the code. This is the process you would fol
 
 `gh repo sync <YOUR FORKED REPO NAME>`
 
-`git pull`
+`git pull origin`
 
-`git checkout -b <BRANCH NAME>`
 *Edit the code, run tests, etc.*
+
 `git commit -a -m "<COMMIT MESSAGE>"`
-`git fetch origin main:main` *shortcut to update main branch with remote changes*
-`git rebase main`
-*Run automated tests.*
-`git checkout main`
-`git pull`
-*In the unlikely case that any changes were made to the remote repository since you started rebasing (which you find out through* `git pull`*), return to rebasing.*
-`git merge <BRANCH NAME>`
-`git push`
+
+`git pull origin`
+
+*Run tests.*
+
+`git push origin`
+
+`gh pr create`
 
 ## Fork and commit guide
-I personally found the steps on this repo helpful.
-https://github.com/firstcontributions/first-contributions
+
+There are also some helpful steps for the Git workflow [here](https://github.com/firstcontributions/first-contributions).
