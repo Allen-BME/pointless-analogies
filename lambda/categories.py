@@ -1,6 +1,6 @@
 import random
 
-categories = ["chair", "hat", "boat", "shoe", "wig", "hair tie", "chair", "toothbrush",
-              "fork", "shirt", "belt", "table", "boat", "car", "pen", "bicycle",
+categories = ["chair", "hat", "boat", "shoe", "wig", "hair tie", "apple", "toothbrush",
+              "fork", "shirt", "belt", "table", "bat", "car", "pen", "bicycle",
               "ice cube tray", "knife", "purse", "cat"]
 result = random.choice(categories)
