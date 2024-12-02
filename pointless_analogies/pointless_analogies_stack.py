@@ -16,6 +16,12 @@ class PointlessAnalogiesStack(Stack):
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
+        # Create a VPC, required for the RDS database
+        vpc = ec2.Vpc(
+            self, "Pointless-Analogies-Vpc",
+            max_azs=2
+        )
+
         # Add S3 Bucket to stack
         image_bucket = s3.Bucket(
             self,
@@ -95,12 +101,6 @@ class PointlessAnalogiesStack(Stack):
                 "ListBucketPolicy",  # Policy ID
                 statements=[list_bucket_policy]  # Add permissions
             )
-        )
-
-        # Create a VPC, required for the RDS database
-        vpc = ec2.Vpc(
-            self, "Pointless-Analogies-Vpc",
-            max_azs=2
         )
 
         # Create an RDS database to store voting data
