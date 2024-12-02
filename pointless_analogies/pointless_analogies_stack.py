@@ -106,8 +106,8 @@ class PointlessAnalogiesStack(Stack):
         # Create an RDS database to store voting data
         database = rds.DatabaseInstance(
             self,
-            "Pointless-Analogies-Rds-Database",
-            database_name = "Pointless-Analogies-Rds_Database",
+            "PointlessAnalogiesRdsDatabase",
+            database_name = "PointlessAnalogiesRdsDatabase",
             # Select MYSQL version 8.0.39 as the database type
             engine = rds.DatabaseInstanceEngine.mysql(
                 version = rds.MysqlEngineVersion.VER_8_0_39
@@ -131,7 +131,7 @@ class PointlessAnalogiesStack(Stack):
             # credentials can be granted to a lambda function (secret = database.secret \ secret.grant_read(<LAMBDA FUNCTION ROLE>)
             # \ secret.grant_write(<LAMBDA FUNCTION ROLE>)
             credentials = rds.Credentials.from_generated_secret("admin"),
-            
+
             publicly_accessible = False,
             # Disable deletion protection
             deletion_protection = False,
