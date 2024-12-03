@@ -6,6 +6,7 @@ from aws_cdk import (
     Duration,
     aws_ec2 as ec2,
     aws_s3 as s3,
+    aws_s3_notifications as s3n,
     aws_rds as rds,
     aws_iam as iam
 )
@@ -17,9 +18,9 @@ class PointlessAnalogiesStack(Stack):
         super().__init__(scope, construct_id, **kwargs)
 
         # Create a VPC, required for the RDS database
-        vpc = ec2.Vpc(
+        vpc = ec2.Vpc.from_lookup(
             self, "Pointless-Analogies-Vpc",
-            max_azs=2
+            vpc_id="vpc-01169b0ddb2a2f86b"
         )
 
         # Add S3 Bucket to stack
@@ -75,6 +76,15 @@ class PointlessAnalogiesStack(Stack):
             }
         )
 
+        uploaded_images = _lambda.Function(
+            self,
+            "Uploaded_images",
+            runtime=_lambda.Runtime.PYTHON_3_11,
+            handler="image_handler.lambda_handler",
+            code=_lambda.Code.from_asset("lambda/"),
+            timeout=Duration.seconds(30),
+        )
+
         # Add an API Gateway REST API that serves to call the lambda function.
         # This gives us the URL for the website
         endpoint = apigw.LambdaRestApi(
@@ -86,6 +96,10 @@ class PointlessAnalogiesStack(Stack):
 
         # Grant read access for the image bucket to the index lambda
         image_bucket.grant_read(test_fun)
+        image_bucket.grant_read_write(uploaded_images)
+
+        image_bucket_notif = s3n.LambdaDestination(uploaded_images)
+        image_bucket.add_event_notification(s3.EventType.OBJECT_CREATED, image_bucket_notif)
 
         # Create a policy that gives the ability to list bucket contents of the
         # image bucket
@@ -140,13 +154,6 @@ class PointlessAnalogiesStack(Stack):
             # Don't create a snapshot when the database is deleted
             removal_policy = RemovalPolicy.DESTROY
         )
-
-
-
-
-
-
-
 
         # example resource
         # queue = sqs.Queue(
