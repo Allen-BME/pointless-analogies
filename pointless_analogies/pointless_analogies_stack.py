@@ -192,7 +192,10 @@ class PointlessAnalogiesStack(Stack):
         image_bucket.grant_read_write(uploaded_images)
 
         image_bucket_notif = s3n.LambdaDestination(uploaded_images)
-        image_bucket.add_event_notification(s3.EventType.OBJECT_CREATED, image_bucket_notif)
+        image_bucket.add_event_notification(
+            s3.EventType.OBJECT_CREATED,
+            image_bucket_notif
+        )
 
         # Create a policy that gives the ability to list bucket contents of the
         # image bucket
