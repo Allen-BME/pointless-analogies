@@ -1,0 +1,38 @@
+
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>DynamoDB Trigger</title>
+            <script>
+                async function triggerAction() {
+        
+                    const apiUrl = "{api.url}";
+        
+                    try {{
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                ImageHash: "Test Hash",
+                                AttributeName: "Test value",
+                                NewValue: 3
+                            })
+                        });
+                        const result = await response.json();
+                        alert(`Action triggered: ${JSON.stringify(result)}`);
+                    }} catch (error) {{
+                        alert(`Error: ${error.message}`);
+                    }}
+                }
+            </script>
+        </head>
+        <body>
+            <h1>DynamoDB Action Trigger</h1>
+            <button onclick="triggerAction()">Trigger Action</button>
+        </body>
+        </html>
+        

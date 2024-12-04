@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vote Buttons</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+    }
+    button {
+      font-size: 16px;
+      padding: 10px 20px;
+      margin: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Vote for Your Category</h1>
+    <button onclick="window.location.href='https://${Token[TOKEN.76]}.execute-api.us-east-1.${Token[AWS.URLSuffix.6]}/${Token[TOKEN.84]}/?vote=Category1Vote'">Category 1</button>
+    <button onclick="window.location.href='https://${Token[TOKEN.76]}.execute-api.us-east-1.${Token[AWS.URLSuffix.6]}/${Token[TOKEN.84]}/?vote=Category2Vote'">Category 2</button>
+  <!-- <form action="/" method="GET">
+    <button type="submit" name="vote" value="Category1Vote">Vote for Category 1</button>
+  </form>
+  <form action="/" method="GET">
+    <button type="submit" name="vote" value="Category2Vote">Vote for Category 2</button>
+  </form> -->
+</body>
+</html>
