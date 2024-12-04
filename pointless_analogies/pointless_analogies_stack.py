@@ -1,7 +1,8 @@
 from aws_cdk import (
     Stack,
     aws_lambda as _lambda,
-    aws_apigateway as apigw,
+    aws_apigatewayv2 as apigw,
+    aws_apigatewayv2_integrations as apigw_integrations,
     RemovalPolicy,
     Duration,
     aws_ec2 as ec2,
@@ -16,17 +17,92 @@ import json
 import os
 import shutil
 
-def replace_placeholder(file_path, placeholder, replacement):
-    with open(file_path, "r") as file:
-        content = file.read()
-    content = content.replace(placeholder, replacement)
-    with open(file_path, "w") as file:
-        file.write(content)
-
 class PointlessAnalogiesStack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
+
+        apigw_test_function = _lambda.Function(
+            scope = self,
+            id = "PointlessAnalogiesAPIGWTestFunction",
+            function_name = "PointlessAnalogiesAPIGWTestFunction",
+            runtime = _lambda.Runtime.PYTHON_3_11,
+            handler = "apigw_test_function.lambda_handler",
+            code = _lambda.Code.from_asset("lambda/"),
+            timeout = Duration.seconds(30)
+        )
+
+        test_api = apigw.HttpApi(
+            scope = self,
+            id = "PointlessAnalogiesTestApi",
+            api_name = "PointlessAnalogiesTestApi",
+            default_integration = apigw_integrations.HttpLambdaIntegration(
+                id = "PointlessAnalogiesAPIGWTestIntegration",
+                handler = apigw_test_function
+            )
+        )
+
+        # hw5_function = _lambda.Function(
+        #     scope = self,
+        #     id = "PointlessAnalogiesHW5Function",
+        #     function_name = "PointlessAnalogiesHW5Function",
+        #     runtime = _lambda.Runtime.NODEJS_18_X,
+        #     handler = "index.handler",
+        #     code = _lambda.Code.from_asset("lambda/"),
+        #     timeout = Duration.seconds(30)
+        # )
+
+        # hw5_function_url = _lambda.FunctionUrl(
+        #     scope = self,
+        #     id = "PointlessAnalogiesHW5FunctionURL",
+        #     function = hw5_function,
+        #     auth_type = _lambda.FunctionUrlAuthType.NONE,
+        #     invoke_mode = _lambda.InvokeMode.BUFFERED
+        # )
+
+        # hw5_table = dynamodb.TableV2(
+        #     scope = self,
+        #     id = "PointlessAnalogiesHW5Table",
+        #     table_name = "SS-formStore",
+        #     partition_key = dynamodb.Attribute(
+        #         name = "PK",
+        #         type = dynamodb.AttributeType.STRING
+        #     ),
+        #     sort_key = dynamodb.Attribute(
+        #         name = "SK",
+        #         type = dynamodb.AttributeType.STRING
+        #     ),
+        #     removal_policy = RemovalPolicy.DESTROY
+        # )
+
+        # hw5_table.grant_full_access(hw5_function)
+
+        # bucket = s3.Bucket(
+        #     scope = self,
+        #     id = "WebAppBucket",
+        #     website_index_document = "index.html",
+        #     #public_read_acess = True
+        #     block_public_access=s3.BlockPublicAccess(
+        #         block_public_acls=False,
+        #         block_public_policy=False,
+        #         ignore_public_acls=False,
+        #         restrict_public_buckets=False
+        #     ),
+        #     removal_policy = RemovalPolicy.DESTROY,
+        #     auto_delete_objects = True
+        # )
+        # bucket.grant_public_access()
+        # bucket.grant_read(hw5_function)
+
+        # # Deploy the HTML file to the S3 bucket
+        # s3_deployment.BucketDeployment(
+        #     scope = self, 
+        #     id = "DeployWebApp",
+        #     destination_bucket = bucket,
+        #     sources = [s3_deployment.Source.asset("./html")]
+        # )
+
+        # hw5_function.add_environment("HTML_BUCKET_NAME", bucket.bucket_name)
 
         # # Add S3 Bucket to stack
         # image_bucket = s3.Bucket(
@@ -64,127 +140,127 @@ class PointlessAnalogiesStack(Stack):
         # )
         
         # Create a DynamoDB table to store voting data
-        table = dynamodb.TableV2(
-            scope = self,
-            id = "PointlessAnalogiesVotesTable",
-            table_name = "PointlessAnalogiesVotesTable",
-            partition_key = dynamodb.Attribute(name = "ImageHash", type = dynamodb.AttributeType.STRING),
-            removal_policy = RemovalPolicy.DESTROY,
-        )
+        # table = dynamodb.TableV2(
+        #     scope = self,
+        #     id = "PointlessAnalogiesVotesTable",
+        #     table_name = "PointlessAnalogiesVotesTable",
+        #     partition_key = dynamodb.Attribute(name = "ImageHash", type = dynamodb.AttributeType.STRING),
+        #     removal_policy = RemovalPolicy.DESTROY,
+        # )
 
-        # Create a lambda function to add an initial image to the database
-        initial_image = _lambda.Function(
-            scope = self,
-            id = "PointlessAnalogiesInitialImage",
-            function_name = "PointlessAnalogiesInitialImage",
-            runtime = _lambda.Runtime.PYTHON_3_11,
-            # Name of the function to be called by the lambda
-            handler = "initial_image.initial_image",
-            # Specify the file to take the code from
-            code = _lambda.Code.from_asset("lambda/"),
-            # Increase lambda function timeout to 30 seconds to make sure the database has time to be initialized
-            timeout = Duration.seconds(30)
-        )
+        # # Create a lambda function to add an initial image to the database
+        # initial_image = _lambda.Function(
+        #     scope = self,
+        #     id = "PointlessAnalogiesInitialImage",
+        #     function_name = "PointlessAnalogiesInitialImage",
+        #     runtime = _lambda.Runtime.PYTHON_3_11,
+        #     # Name of the function to be called by the lambda
+        #     handler = "initial_image.initial_image",
+        #     # Specify the file to take the code from
+        #     code = _lambda.Code.from_asset("lambda/"),
+        #     # Increase lambda function timeout to 30 seconds to make sure the database has time to be initialized
+        #     timeout = Duration.seconds(30)
+        # )
 
-        # Add the name of the table to the initial_image lambda function
-        initial_image.add_environment("TABLE_NAME", table.table_name)
+        # # Add the name of the table to the initial_image lambda function
+        # initial_image.add_environment("TABLE_NAME", table.table_name)
 
-        # Allow initial_image to read and write from the table
-        table.grant_write_data(initial_image)
-        table.grant_read_data(initial_image)
+        # # Allow initial_image to read and write from the table
+        # table.grant_write_data(initial_image)
+        # table.grant_read_data(initial_image)
 
-        vote_function = _lambda.Function(
-            scope = self,
-            id = "PointlessAnalogiesVoteFunction",
-            function_name = "PointlessAnalogiesVoteFunction",
-            runtime = _lambda.Runtime.PYTHON_3_11,
-            handler = "vote.lambda_handler",
-            code = _lambda.Code.from_asset("lambda/"),
-            timeout = Duration.seconds(60),
-        )
+        # vote_function = _lambda.Function(
+        #     scope = self,
+        #     id = "PointlessAnalogiesVoteFunction",
+        #     function_name = "PointlessAnalogiesVoteFunction",
+        #     runtime = _lambda.Runtime.PYTHON_3_11,
+        #     handler = "vote.lambda_handler",
+        #     code = _lambda.Code.from_asset("lambda/"),
+        #     timeout = Duration.seconds(60),
+        # )
 
-        # Add the name of the table to the initial_image lambda function
-        vote_function.add_environment("TABLE_NAME", table.table_name)
+        # # Add the name of the table to the initial_image lambda function
+        # vote_function.add_environment("TABLE_NAME", table.table_name)
 
-        # Allow initial_image to read and write from the table
-        table.grant_write_data(vote_function)
-        table.grant_read_data(vote_function)
+        # # Allow initial_image to read and write from the table
+        # table.grant_write_data(vote_function)
+        # table.grant_read_data(vote_function)
 
-        api = apigw.LambdaRestApi(
-            scope = self,
-            id = "VoteApi",
-            handler = vote_function, 
-            proxy = True
-        )
+        # api = apigw.LambdaRestApi(
+        #     scope = self,
+        #     id = "VoteApi",
+        #     handler = vote_function, 
+        #     proxy = True
+        # )
 
-        # Replace the placeholder in the HTML file with the API Gateway URL
-        html_dir = "./html"
-        updated_html_dir = "./html_temp"
-        if os.path.exists(updated_html_dir):
-            shutil.rmtree(updated_html_dir)  # Clean up previous temporary directory
-        shutil.copytree(html_dir, updated_html_dir)  # Create a temporary directory
+        # # Replace the placeholder in the HTML file with the API Gateway URL
+        # html_dir = "./html"
+        # updated_html_dir = "./html_temp"
+        # if os.path.exists(updated_html_dir):
+        #     shutil.rmtree(updated_html_dir)  # Clean up previous temporary directory
+        # shutil.copytree(html_dir, updated_html_dir)  # Create a temporary directory
 
-        html_file_path = os.path.join(updated_html_dir, "index.html")
-        replace_placeholder(html_file_path, "{{API_GATEWAY_URL}}", api.url)
+        # html_file_path = os.path.join(updated_html_dir, "index.html")
+        # replace_placeholder(html_file_path, "{{API_GATEWAY_URL}}", api.url)
 
-        bucket = s3.Bucket(
-            scope = self,
-            id = "WebAppBucket",
-            website_index_document = "index.html",
-            #public_read_acess = True
-            block_public_access=s3.BlockPublicAccess(
-                block_public_acls=False,
-                block_public_policy=False,
-                ignore_public_acls=False,
-                restrict_public_buckets=False
-            ),
-            removal_policy = RemovalPolicy.DESTROY,
-            auto_delete_objects = True
-        )
-        bucket.grant_public_access()
+        # bucket = s3.Bucket(
+        #     scope = self,
+        #     id = "WebAppBucket",
+        #     website_index_document = "index.html",
+        #     #public_read_acess = True
+        #     block_public_access=s3.BlockPublicAccess(
+        #         block_public_acls=False,
+        #         block_public_policy=False,
+        #         ignore_public_acls=False,
+        #         restrict_public_buckets=False
+        #     ),
+        #     removal_policy = RemovalPolicy.DESTROY,
+        #     auto_delete_objects = True
+        # )
+        # bucket.grant_public_access()
 
-        # Deploy the HTML file to the S3 bucket
-        s3_deployment.BucketDeployment(
-            scope = self, 
-            id = "DeployWebApp",
-            destination_bucket = bucket,
-            sources = [s3_deployment.Source.asset(updated_html_dir)]
-        )
+        # # Deploy the HTML file to the S3 bucket
+        # s3_deployment.BucketDeployment(
+        #     scope = self, 
+        #     id = "DeployWebApp",
+        #     destination_bucket = bucket,
+        #     sources = [s3_deployment.Source.asset(updated_html_dir)]
+        # )
 
-        # Create custom resource provider to manage the custom resource that adds an initial image to the table
-        initial_image_provider = cr.Provider(
-            scope = self,
-            id = "PointlessAnalogiesInitialImageProvider",
-            on_event_handler = initial_image
-        )
+        # # Create custom resource provider to manage the custom resource that adds an initial image to the table
+        # initial_image_provider = cr.Provider(
+        #     scope = self,
+        #     id = "PointlessAnalogiesInitialImageProvider",
+        #     on_event_handler = initial_image
+        # )
 
-        # Create custom resource to call the lambda function that adds an initial image to the table
-        initial_image_resource = cr.AwsCustomResource(
-            scope = self,
-            id = "PointlessAnalogiesInitialImageResource",
-            function_name = "PointlessAnalogiesInitialImageResourceFunction",
-            # Define the function to call when the stack is created
-            on_create = cr.AwsSdkCall(
-                service = "Lambda",
-                action = "invoke",
-                parameters = {
-                    "FunctionName": initial_image.function_name,
-                    "InvocationType": "RequestResponse",
-                    "Payload": "{}"
-                },
-                physical_resource_id = cr.PhysicalResourceId.of("PointlessAnalogiesInitialImageResourceID")
-            ),
-            policy = cr.AwsCustomResourcePolicy.from_statements([
-                iam.PolicyStatement(
-                    actions = ["lambda:InvokeFunction"],
-                    resources = [initial_image.function_arn]
-                )
-            ])
-        )
+        # # Create custom resource to call the lambda function that adds an initial image to the table
+        # initial_image_resource = cr.AwsCustomResource(
+        #     scope = self,
+        #     id = "PointlessAnalogiesInitialImageResource",
+        #     function_name = "PointlessAnalogiesInitialImageResourceFunction",
+        #     # Define the function to call when the stack is created
+        #     on_create = cr.AwsSdkCall(
+        #         service = "Lambda",
+        #         action = "invoke",
+        #         parameters = {
+        #             "FunctionName": initial_image.function_name,
+        #             "InvocationType": "RequestResponse",
+        #             "Payload": "{}"
+        #         },
+        #         physical_resource_id = cr.PhysicalResourceId.of("PointlessAnalogiesInitialImageResourceID")
+        #     ),
+        #     policy = cr.AwsCustomResourcePolicy.from_statements([
+        #         iam.PolicyStatement(
+        #             actions = ["lambda:InvokeFunction"],
+        #             resources = [initial_image.function_arn]
+        #         )
+        #     ])
+        # )
 
-        # Output the bucket website URL and API endpoint
-        self.bucket_url = bucket.bucket_website_url
-        self.api_url = api.url
+        # # Output the bucket website URL and API endpoint
+        # self.bucket_url = bucket.bucket_website_url
+        # self.api_url = api.url
 
         # # Add Lambda function that serves as site index
         # test_fun = _lambda.Function(
