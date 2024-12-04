@@ -13,8 +13,17 @@ def lambda_handler(event, context):
 
     for record in event['Records']:
         bucket = record['s3']['bucket']['name']
-        key = record['s3']['object']['key']
+        key: str = record['s3']['object']['key']
+
+        # Quick fix to prevent the lambda from trying to rename an already
+        # renamed file
+        if key.startswith("uniq-"):
+            print("Duplicate found. Continuing")
+            continue
+
         new_key = f"uniq-{uuid.uuid4()}"
+
+        print(f"Created image hash {new_key} to replace {key}")
 
         response = client.invoke(
             FunctionName='get-categories',
@@ -28,6 +37,8 @@ def lambda_handler(event, context):
 
         category1 = split_categories[0]
         category2 = split_categories[1]
+
+        print(f"Got the two categories {category1} and {category2}")
 
         table_response = table.put_item(
             Item = {
