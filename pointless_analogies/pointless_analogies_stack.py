@@ -8,8 +8,9 @@ from aws_cdk import (
     aws_ec2 as ec2,
     aws_s3 as s3,
     aws_s3_deployment as s3_deployment,
-    aws_dynamodb as dynamodb,
+    aws_s3_notifications as s3n,
     aws_iam as iam,
+    aws_dynamodb as dynamodb,
     custom_resources as cr,
 )
 from constructs import Construct
@@ -258,27 +259,69 @@ class PointlessAnalogiesStack(Stack):
         #     ])
         # )
 
-        # # Output the bucket website URL and API endpoint
-        # self.bucket_url = bucket.bucket_website_url
-        # self.api_url = api.url
+        # Add Lambda function that serves as site index
+        test_fun = _lambda.Function(
+            self,
+            "Index",  # Lambda ID
+            runtime=_lambda.Runtime.PYTHON_3_11,  # Python version
+            handler="index.lambda_handler",  # Name of the method within index.py
+            code=_lambda.Code.from_asset("lambda/"),  # Specify source location
+            # Increase lambda function timeout to 30 seconds.
+            # This is needed since getting the objects from S3 takes more time than
+            # the default 25 ms
+            timeout=Duration.seconds(30),
+            # Add the bucket name to the environment.
+            # This is needed as the bucket name that cdk generates is random
+            environment={
+                "BUCKET_NAME": image_bucket.bucket_name 
+            }
+        )
 
-        # # Add Lambda function that serves as site index
-        # test_fun = _lambda.Function(
-        #     self,
-        #     "Index",  # Lambda ID
-        #     runtime=_lambda.Runtime.PYTHON_3_11,  # Python version
-        #     handler="index.lambda_handler",  # Name of the method within index.py
-        #     code=_lambda.Code.from_asset("lambda/"),  # Specify source location
-        #     # Increase lambda function timeout to 30 seconds.
-        #     # This is needed since getting the objects from S3 takes more time than
-        #     # the default 25 ms
-        #     timeout=Duration.seconds(30),
-        #     # Add the bucket name to the environment.
-        #     # This is needed as the bucket name that cdk generates is random
-        #     environment={
-        #         "BUCKET_NAME": image_bucket.bucket_name 
-        #     }
-        # )
+        category_role = iam.Role(
+            self,
+            "CategoryRole",
+            assumed_by=iam.ServicePrincipal("lambda.amazonaws.com"),
+            managed_policies=[
+                iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AWSLambdaBasicExecutionRole"),
+                iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AWSLambdaVPCAccessExecutionRole")
+            ]
+        )
+
+        category_invoke_policy = iam.Policy(
+            self,
+            "CategoryInvokePolicy",
+            statements=[
+                iam.PolicyStatement(
+                    actions=["lambda:InvokeFunction"],
+                    resources=[f"arn:aws:lambda:{self.region}:{self.account}:function:get-categories"]
+                )
+            ]
+        )
+        category_role.attach_inline_policy(category_invoke_policy)
+
+        categories = _lambda.Function(
+            self,
+            "Categories",
+            runtime=_lambda.Runtime.PYTHON_3_11,
+            handler="categories.lambda_handler",
+            code=_lambda.Code.from_asset("lambda/"),
+            timeout=Duration.seconds(5),
+            function_name="get-categories"
+        )
+
+        uploaded_images = _lambda.Function(
+            self,
+            "Uploaded_images",
+            runtime=_lambda.Runtime.PYTHON_3_11,
+            handler="image_handler.lambda_handler",
+            code=_lambda.Code.from_asset("lambda/"),
+            timeout=Duration.seconds(30),
+            role=category_role
+        )
+
+        uploaded_images.add_environment("TABLE_NAME", table.table_name)
+
+        table.grant_read_write_data(uploaded_images)
 
         # # Add an API Gateway REST API that serves to call the lambda function.
         # # This gives us the URL for the website
@@ -289,8 +332,15 @@ class PointlessAnalogiesStack(Stack):
         #     rest_api_name="IndexApi"  # Name of the API
         # )
 
-        # # Grant read access for the image bucket to the index lambda
-        # image_bucket.grant_read(test_fun)
+        # Grant read access for the image bucket to the index lambda
+        image_bucket.grant_read(test_fun)
+        image_bucket.grant_read_write(uploaded_images)
+
+        image_bucket_notif = s3n.LambdaDestination(uploaded_images)
+        image_bucket.add_event_notification(
+            s3.EventType.OBJECT_CREATED,
+            image_bucket_notif
+        )
 
         # # Create a policy that gives the ability to list bucket contents of the
         # # image bucket
@@ -299,27 +349,11 @@ class PointlessAnalogiesStack(Stack):
         #     resources=[image_bucket.bucket_arn]  # for this bucket
         # )
 
-        # # Add the defined policy to the lambda function
-        # test_fun.role.attach_inline_policy(
-        #     iam.Policy(
-        #         self,
-        #         "ListBucketPolicy",  # Policy ID
-        #         statements=[list_bucket_policy]  # Add permissions
-        #     )
-        # )
-
-        
-
-
-
-
-
-
-
-
-
-        # example resource
-        # queue = sqs.Queue(
-        #     self, "PointlessAnalogiesQueue",
-        #     visibility_timeout=Duration.seconds(300),
-        # )
+        # Add the defined policy to the lambda function
+        test_fun.role.attach_inline_policy(
+            iam.Policy(
+                self,
+                "ListBucketPolicy",  # Policy ID
+                statements=[list_bucket_policy]  # Add permissions
+            )
+        )
