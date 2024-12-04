@@ -10,6 +10,7 @@ from aws_cdk import (
     aws_dynamodb as dynamodb,
     aws_iam as iam,
     custom_resources as cr,
+    aws_s3_notifications as s3n,
 )
 from constructs import Construct
 import json

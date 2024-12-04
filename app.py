@@ -6,6 +6,7 @@ import aws_cdk as cdk
 from pointless_analogies.pointless_analogies_stack import PointlessAnalogiesStack
 
 
+
 app = cdk.App()
 PointlessAnalogiesStack(app, "PointlessAnalogiesStack",
     # If you don't specify 'env', this stack will be environment-agnostic.
