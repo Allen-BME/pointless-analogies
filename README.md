@@ -1,5 +1,21 @@
 
-# Welcome to your CDK Python project!
+# Pointless Analogies
+
+This is an AWS CDK app written in Python that provides a website to make utterly pointless, but sometimes fun comparisons between objects. When you go to the website you're given a choice to upload an image - any image you want - which will then be stored in a database along with two randomly selected nouns. Afterwards you're shown the images that other people have uploaded along with the nouns associated with their images. It is then your task to vote on which noun you think is closest to the image.
+
+Suppose someone uploads an image of their backpack and the nouns assigned to it are "shoe" and "car". When you see this image you would then vote on whether the backpack shown is more like a shoe or a car. Obviously the real answer is that it's neither, but you might find that you can make an argument either way. You could say it's like a shoe because it's something you wear, but you could also say it's like a car because you can use it to transport items. These are pointless analogies, but you could have some fun with it if you got into it.
+
+## App Architecture
+
+This app uses a serverless architecture for minimal cost and easy scalability.
+
+## Automated Deployment
+
+## Security
+
+## Source Control
+
+# Original README for Temporary Reference
 
 This is a blank project for CDK development with Python.
 

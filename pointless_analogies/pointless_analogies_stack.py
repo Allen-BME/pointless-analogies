@@ -7,8 +7,9 @@ from aws_cdk import (
     aws_ec2 as ec2,
     aws_s3 as s3,
     aws_s3_notifications as s3n,
-    aws_rds as rds,
-    aws_iam as iam
+    aws_iam as iam,
+    aws_dynamodb as dynamodb,
+    custom_resources as cr
 )
 from constructs import Construct
 
@@ -16,12 +17,6 @@ class PointlessAnalogiesStack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
-
-        # Create a VPC, required for the RDS database
-        vpc = ec2.Vpc.from_lookup(
-            self, "Pointless-Analogies-Vpc",
-            vpc_id="vpc-01169b0ddb2a2f86b"
-        )
 
         # Add S3 Bucket to stack
         image_bucket = s3.Bucket(
@@ -56,6 +51,67 @@ class PointlessAnalogiesStack(Stack):
             removal_policy=RemovalPolicy.DESTROY,  # Delete all web content when stack is deleted
             auto_delete_objects=True,  # Auto-delete images when stack is destroyed
             bucket_name="pointless-analogies-web-content"  # Web content bucket name
+        )
+        
+        # Create a DynamoDB table to store voting data
+        table = dynamodb.TableV2(
+            scope = self,
+            id = "PointlessAnalogiesVotesTable",
+            table_name = "PointlessAnalogiesVotesTable",
+            partition_key = dynamodb.Attribute(name = "ImageHash", type = dynamodb.AttributeType.STRING),
+            removal_policy = RemovalPolicy.DESTROY,
+        )
+
+        # Create a lambda function to add an initial image to the database
+        initial_image = _lambda.Function(
+            scope = self,
+            id = "PointlessAnalogiesInitialImage",
+            function_name = "PointlessAnalogiesInitialImage",
+            runtime = _lambda.Runtime.PYTHON_3_11,
+            # Name of the function to be called by the lambda
+            handler = "initial_image.initial_image",
+            # Specify the file to take the code from
+            code = _lambda.Code.from_asset("lambda/"),
+            # Increase lambda function timeout to 30 seconds to make sure the database has time to be initialized
+            timeout=Duration.seconds(30),
+        )
+
+        # Add the name of the table to the initial_image lambda function
+        initial_image.add_environment("TABLE_NAME", table.table_name)
+
+        # Allow initial_image to read and write from the table
+        table.grant_write_data(initial_image)
+        table.grant_read_data(initial_image)
+
+        # Create custom resource provider to manage the custom resource that adds an initial image to the table
+        initial_image_provider = cr.Provider(
+            scope = self,
+            id = "PointlessAnalogiesInitialImageProvider",
+            on_event_handler = initial_image
+        )
+
+        # Create custom resource to call the lambda function that adds an initial image to the table
+        initial_image_resource = cr.AwsCustomResource(
+            scope = self,
+            id = "PointlessAnalogiesInitialImageResource",
+            function_name = "PointlessAnalogiesInitialImageResourceFunction",
+            # Define the function to call when the stack is created
+            on_create = cr.AwsSdkCall(
+                service = "Lambda",
+                action = "invoke",
+                parameters = {
+                    "FunctionName": initial_image.function_name,
+                    "InvocationType": "RequestResponse",
+                    "Payload": "{}"
+                },
+                physical_resource_id = cr.PhysicalResourceId.of("PointlessAnalogiesInitialImageResourceID")
+            ),
+            policy = cr.AwsCustomResourcePolicy.from_statements([
+                iam.PolicyStatement(
+                    actions = ["lambda:InvokeFunction"],
+                    resources = [initial_image.function_arn]
+                )
+            ])
         )
 
         # Add Lambda function that serves as site index
@@ -116,47 +172,3 @@ class PointlessAnalogiesStack(Stack):
                 statements=[list_bucket_policy]  # Add permissions
             )
         )
-
-        # Create an RDS database to store voting data
-        database = rds.DatabaseInstance(
-            self,
-            "PointlessAnalogiesRdsDatabase",
-            database_name = "PointlessAnalogiesRdsDatabase",
-            # Select MYSQL version 8.0.39 as the database type
-            engine = rds.DatabaseInstanceEngine.mysql(
-                version = rds.MysqlEngineVersion.VER_8_0_39
-            ),
-            # Instance type is Burstable3 (which means T3) Micro
-            instance_type = ec2.InstanceType.of(
-                ec2.InstanceClass.BURSTABLE3,
-                ec2.InstanceSize.MICRO
-            ),
-            multi_az = False,
-            # Allocate 10 GB storage to the database, autoscale up to 100 GB if needed
-            allocated_storage = 10,
-            max_allocated_storage = 100,
-            # Put the database in the VPC and restrct the database from public internet access except through a NAT gateway
-            vpc = vpc,
-            vpc_subnets = {
-                "subnet_type": ec2.SubnetType.PRIVATE_WITH_EGRESS
-            },
-            # Automatically create a user called admin and generate a password for them. These credentials are required to
-            # access the database. If the AWS secrets manager module is used (from aws_cdk.aws_secretsmanager import ISecret),
-            # credentials can be granted to a lambda function (secret = database.secret \ secret.grant_read(<LAMBDA FUNCTION ROLE>)
-            # \ secret.grant_write(<LAMBDA FUNCTION ROLE>)
-            credentials = rds.Credentials.from_generated_secret("admin"),
-
-            publicly_accessible = False,
-            # Disable deletion protection
-            deletion_protection = False,
-            # Delete automated backups when the database is deleted
-            delete_automated_backups = True,
-            # Don't create a snapshot when the database is deleted
-            removal_policy = RemovalPolicy.DESTROY
-        )
-
-        # example resource
-        # queue = sqs.Queue(
-        #     self, "PointlessAnalogiesQueue",
-        #     visibility_timeout=Duration.seconds(300),
-        # )
