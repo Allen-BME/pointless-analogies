@@ -14,6 +14,8 @@ def lambda_handler(event, context):
     while sec_result == result:
         sec_result = random.choice(categories)
 
+    print(f"Got two categories: {result} and {sec_result}")
+
     return {
         'statusCode': 200,
         'body': f"{result}-{sec_result}"
