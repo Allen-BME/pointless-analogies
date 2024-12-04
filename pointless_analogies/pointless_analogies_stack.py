@@ -132,6 +132,38 @@ class PointlessAnalogiesStack(Stack):
             }
         )
 
+        category_role = iam.Role(
+            self,
+            "CategoryRole",
+            assumed_by=iam.ServicePrincipal("lambda.amazonaws.com"),
+            managed_policies=[
+                iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AWSLambdaBasicExecutionRole"),
+                iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AWSLambdaVPCAccessExecutionRole")
+            ]
+        )
+
+        category_invoke_policy = iam.Policy(
+            self,
+            "CategoryInvokePolicy",
+            statements=[
+                iam.PolicyStatement(
+                    actions=["lambda:InvokeFunction"],
+                    resources=[f"arn:aws:lambda:{self.region}:{self.account}:function:get-categories"]
+                )
+            ]
+        )
+        category_role.attach_inline_policy(category_invoke_policy)
+
+        categories = _lambda.Function(
+            self,
+            "Categories",
+            runtime=_lambda.Runtime.PYTHON_3_11,
+            handler="categories.lambda_handler",
+            code=_lambda.Code.from_asset("lambda/"),
+            timeout=Duration.seconds(5),
+            function_name="get-categories"
+        )
+
         uploaded_images = _lambda.Function(
             self,
             "Uploaded_images",
@@ -139,7 +171,12 @@ class PointlessAnalogiesStack(Stack):
             handler="image_handler.lambda_handler",
             code=_lambda.Code.from_asset("lambda/"),
             timeout=Duration.seconds(30),
+            role=category_role
         )
+
+        uploaded_images.add_environment("TABLE_NAME", table.table_name)
+
+        table.grant_read_write_data(uploaded_images)
 
         # Add an API Gateway REST API that serves to call the lambda function.
         # This gives us the URL for the website

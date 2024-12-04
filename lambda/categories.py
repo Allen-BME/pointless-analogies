@@ -9,4 +9,12 @@ def lambda_handler(event, context):
               "fork", "shirt", "belt", "table", "bat", "car", "pen", "bicycle",
               "ice cube tray", "knife", "purse", "cat"]
     result = random.choice(categories)
-    return result
+    sec_result = random.choice(categories)
+
+    while sec_result == result:
+        sec_result = random.choice(categories)
+
+    return {
+        'statusCode': 200,
+        'body': f"{result}-{sec_result}"
+    }
