@@ -1,22 +1,77 @@
 from aws_cdk import (
     Stack,
     aws_lambda as _lambda,
-    aws_apigateway as apigw,
+    aws_apigatewayv2 as apigw,
+    aws_apigatewayv2_integrations as apigw_integrations,
     RemovalPolicy,
     Duration,
     aws_ec2 as ec2,
     aws_s3 as s3,
+    aws_s3_deployment as s3_deployment,
     aws_s3_notifications as s3n,
     aws_iam as iam,
     aws_dynamodb as dynamodb,
-    custom_resources as cr
+    custom_resources as cr,
 )
 from constructs import Construct
+import json
+import os
+import shutil
 
 class PointlessAnalogiesStack(Stack):
 
     def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
+
+        # Create a bucket to store template HTML files
+        html_bucket = s3.Bucket(
+            scope = self,
+            id = "PointlessAnalogiesHTMLBucket",
+            website_index_document = "index.html",
+            block_public_access=s3.BlockPublicAccess(
+                block_public_acls=False,
+                block_public_policy=False,
+                ignore_public_acls=False,
+                restrict_public_buckets=False
+            ),
+            removal_policy = RemovalPolicy.DESTROY,
+            auto_delete_objects = True
+        )
+        html_bucket.grant_public_access()
+
+        # Deploy the all HTML files in html_templates to html_bucket
+        s3_deployment.BucketDeployment(
+            scope = self, 
+            id = "PointlessAnalogiesDeployHTMLTemplates",
+            destination_bucket = html_bucket,
+            sources = [s3_deployment.Source.asset("./html_templates/")]
+        )
+        
+        # Create a function to display the voting page for a given image
+        vote_page_function = _lambda.Function(
+            scope = self,
+            id = "PointlessAnalogiesVotePageFunction",
+            function_name = "PointlessAnalogiesVotePageFunction",
+            runtime = _lambda.Runtime.PYTHON_3_11,
+            handler = "vote_page_function.lambda_handler",
+            code = _lambda.Code.from_asset("lambda/"),
+            timeout = Duration.seconds(30)
+        )
+        html_bucket.grant_read(vote_page_function)
+        vote_page_function.add_environment("HTML_BUCKET_NAME", html_bucket.bucket_name)
+        vote_page_function.add_environment("HTML_FILE_NAME", "vote_page.html")
+
+        # Create an HTTP API to access the lambda functions
+        http_api = apigw.HttpApi(
+            scope = self,
+            id = "PointlessAnalogiesHTTPApi",
+            api_name = "PointlessAnalogiesHTTPApi",
+            default_integration = apigw_integrations.HttpLambdaIntegration(
+                id = "PointlessAnalogiesAPIGWVotePageIntegration",
+                handler = vote_page_function
+            )
+        )
+
 
         # Add S3 Bucket to stack
         image_bucket = s3.Bucket(
@@ -73,7 +128,7 @@ class PointlessAnalogiesStack(Stack):
             # Specify the file to take the code from
             code = _lambda.Code.from_asset("lambda/"),
             # Increase lambda function timeout to 30 seconds to make sure the database has time to be initialized
-            timeout=Duration.seconds(30),
+            timeout = Duration.seconds(30)
         )
 
         # Add the name of the table to the initial_image lambda function
