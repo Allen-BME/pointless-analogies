@@ -1,1 +1,57 @@
-Hello from AWS S3 from AWS Lambda!
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vote for a Category!</title>
+    <script>
+        // JavaScript function to call the API Gateway endpoint
+        async function triggerEndpoint() {
+            // apiEndpoint is replaced with the actual endpoint to call for voting buttons
+            const apiUrl = {apiEndpoint};
+
+            // Set a variable to refer to the vote button
+            const button = document.querySelector('button');
+
+            // Disable the button once it is pressed
+            button.disabled = true;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        voteChoice: "Example Category"
+                    }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Success:', data.message, data.voteChoiceMessage);
+
+                    // Replace the button with vote choice text
+                    const voteChoiceText = document.createTextNode(`${data.message}\n${data.voteChoiceMessage}`);
+                    button.replaceWith(voteChoiceText);
+                } else {
+                    console.error('Error:', response.status, response.statusText);
+
+                    // Write an error message below the button
+                    const failureMessage = document.createTextNode("Error occurred. Please try again.");
+                    document.body.appendChild(failureMessage);
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+
+                // Write an error message below the button
+                const errorMessage = document.createTextNode("An error occurred. Check the console for more details.");
+                document.body.appendChild(errorMessage);
+            }
+        }
+    </script>
+</head>
+<body>
+    <button type="button" onclick="triggerEndpoint()">Vote for Example Category</button>
+</body>
+</html>

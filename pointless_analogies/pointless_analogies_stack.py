@@ -48,18 +48,30 @@ class PointlessAnalogiesStack(Stack):
         )
         
         # Create a function to display the voting page for a given image
-        vote_page_function = _lambda.Function(
+        vote_page_initial_function = _lambda.Function(
             scope = self,
-            id = "PointlessAnalogiesVotePageFunction",
-            function_name = "PointlessAnalogiesVotePageFunction",
+            id = "PointlessAnalogiesVotePageInitialFunction",
+            function_name = "PointlessAnalogiesVotePageInitialFunction",
             runtime = _lambda.Runtime.PYTHON_3_11,
-            handler = "vote_page_function.lambda_handler",
+            handler = "vote_page_functions.vote_page_initial_function",
             code = _lambda.Code.from_asset("lambda/"),
             timeout = Duration.seconds(30)
         )
-        html_bucket.grant_read(vote_page_function)
-        vote_page_function.add_environment("HTML_BUCKET_NAME", html_bucket.bucket_name)
-        vote_page_function.add_environment("HTML_FILE_NAME", "vote_page.html")
+        html_bucket.grant_read(vote_page_initial_function)
+        vote_page_initial_function.add_environment("HTML_BUCKET_NAME", html_bucket.bucket_name)
+        vote_page_initial_function.add_environment("HTML_FILE_NAME", "vote_page.html")
+
+        # Create a function to process votes and display the vote count for a given image
+        vote_page_button_function = _lambda.Function(
+            scope = self,
+            id = "PointlessAnalogiesVotePageButtonFunction",
+            function_name = "PointlessAnalogiesVotePageButtonFunction",
+            runtime = _lambda.Runtime.PYTHON_3_11,
+            handler = "vote_page_functions.vote_page_button_function",
+            code = _lambda.Code.from_asset("lambda/"),
+            timeout = Duration.seconds(15)
+        )
+        vote_page_button_function.add_environment("HTML_BUCKET_NAME", html_bucket.bucket_name)
 
         # Create an HTTP API to access the lambda functions
         http_api = apigw.HttpApi(
@@ -67,10 +79,21 @@ class PointlessAnalogiesStack(Stack):
             id = "PointlessAnalogiesHTTPApi",
             api_name = "PointlessAnalogiesHTTPApi",
             default_integration = apigw_integrations.HttpLambdaIntegration(
-                id = "PointlessAnalogiesAPIGWVotePageIntegration",
-                handler = vote_page_function
+                id = "PointlessAnalogiesAPIGWVotePageInitialIntegration",
+                handler = vote_page_initial_function
             )
         )
+
+        # Add a new route to http_api for vote button actions
+        http_api.add_routes(
+            path = "/vote",
+            methods = [apigw.HttpMethod.POST],
+            integration = apigw_integrations.HttpLambdaIntegration(
+                id = "PointlessAnalogiesAPIGWVotePageButtonIntegration",
+                handler = vote_page_button_function
+            )
+        )
+        vote_page_initial_function.add_environment("API_ENDPOINT", http_api.api_endpoint)
 
 
         # Add S3 Bucket to stack
