@@ -11,6 +11,10 @@ def lambda_handler(event, context):
     TABLE_NAME = os.environ['TABLE_NAME']
     table = dynamodb.Table(TABLE_NAME)
 
+    # Pre-define variables to be accessable to return function
+    response = 0
+    table_response = 0
+
     for record in event['Records']:
         bucket = record['s3']['bucket']['name']
         key: str = record['s3']['object']['key']
