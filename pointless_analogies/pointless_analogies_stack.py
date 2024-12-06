@@ -55,6 +55,15 @@ class PointlessAnalogiesStack(Stack):
             ]
         )
 
+        # Add a bucket policy to allow s3:PutObject
+        image_bucket.add_to_resource_policy(
+            iam.PolicyStatement(
+                actions=["s3:PutObject"],
+                resources=[f"{image_bucket.bucket_arn}/*"],
+                principals=[iam.AnyPrincipal()]
+            )
+        )
+
         # Create a bucket to store template HTML files
         html_bucket = s3.Bucket(
             scope = self,

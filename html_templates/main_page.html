@@ -31,30 +31,52 @@
                 return true;
             }
             
-            async function getPresignedUrl(objectName) {
-                const apiUrl = '{presignedUrlApi}/generate-presigned-url';
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        objectName: objectName,
-                    })
-                });
-                const data = await response.json();
-                return data.url;
-            }
+            // TODO: tighten the security on the image bucket and use presigned urls
+            // async function getPresignedUrl(objectName) {
+            //     const apiUrl = '{presignedUrlApi}/generate-presigned-url';
+            //     const response = await fetch(apiUrl, {
+            //         method: 'POST',
+            //         headers: {
+            //             'Content-Type': 'application/json',
+            //         },
+            //         body: JSON.stringify({
+            //             objectName: objectName,
+            //         })
+            //     });
+            //     const data = await response.json();
+            //     return data.url;
+            // }
+
+            // async function uploadImage(file) {
+            //     const presignedUrl = await getPresignedUrl(file.name);
+            //     const response = await fetch(presignedUrl, {
+            //         method: 'PUT',
+            //         body: file
+            //     });
+
+            //     if (response.ok) {
+            //         console.log('Image uploaded successfully');
+            //     } else {
+            //         console.error('Image upload failed', response.status, response.statusText);
+            //     }
+            // }
 
             async function uploadImage(file) {
-                const presignedUrl = await getPresignedUrl(file.name);
-                const response = await fetch(presignedUrl, {
+                const bucketName = "{imageBucketName}";
+                const objectName = file.name;
+                const s3Url = `https://${bucketName}.s3.amazonaws.com/${objectName}`;
+
+                const response = await fetch(s3Url, {
                     method: 'PUT',
+                    headers: {
+                        'Content-Type': file.type,  // Ensure the Content-Type header matches the file type
+                    },
                     body: file
                 });
 
                 if (response.ok) {
                     console.log('Image uploaded successfully');
+                    location.reload();
                 } else {
                     console.error('Image upload failed', response.status, response.statusText);
                 }

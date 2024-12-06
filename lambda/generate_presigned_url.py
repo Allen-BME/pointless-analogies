@@ -12,6 +12,7 @@ def lambda_handler(event, context):
                                                     Params={'Bucket': bucket_name,
                                                             'Key': body['objectName'],
                                                             },
+                                                    HttpMethod="PUT",
                                                     ExpiresIn=3600)
         
     except Exception as e:
