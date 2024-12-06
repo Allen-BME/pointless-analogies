@@ -6,15 +6,18 @@
     <title>Vote for a Category!</title>
     <script>
         // JavaScript function to call the API Gateway endpoint
-        async function triggerEndpoint() {
+        async function triggerEndpoint(voteChoice) {
             // apiEndpoint is replaced with the actual endpoint to call for voting buttons
             const apiUrl = {apiEndpoint};
+            const ImageHash = {ImageHash}
 
-            // Set a variable to refer to the vote button
-            const button = document.querySelector('button');
+            // Set variables to refer to the vote buttons
+            const button1 = document.getElementById('button1');
+            const button2 = document.getElementById('button2');
 
             // Disable the button once it is pressed
-            button.disabled = true;
+            button1.disabled = true;
+            button2.disabled = true;
 
             try {
                 const response = await fetch(apiUrl, {
@@ -23,7 +26,8 @@
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        voteChoice: "Example Category"
+                        voteChoice: voteChoice,
+                        ImageHash: ImageHash
                     }),
                 });
 
@@ -32,26 +36,35 @@
                     console.log('Success:', data.message, data.voteChoiceMessage);
 
                     // Replace the button with vote choice text
-                    const voteChoiceText = document.createTextNode(`${data.message}\n${data.voteChoiceMessage}`);
-                    button.replaceWith(voteChoiceText);
+                    const message = document.createTextNode(data.message);
+                    const voteChoiceMessage = document.createTextNode(data.voteChoiceMessage);
+                    button1.replaceWith(message);
+                    button2.replaceWith(voteChoiceMessage);
+                    const voteCountsMessage = document.createElement("p");
+                    voteCountsMessage.innerHTML = `There are currently ${data.category1Count} votes for {Category1} and ${data.category2Count} votes for {Category2}.`;
+                    document.body.appendChild(voteCountsMessage);                    
                 } else {
                     console.error('Error:', response.status, response.statusText);
 
                     // Write an error message below the button
-                    const failureMessage = document.createTextNode("Error occurred. Please try again.");
+                    const failureMessage = document.createElement("p");
+                    failureMessage.innerHTML = "Error occurred. Please try again.";
                     document.body.appendChild(failureMessage);
                 }
             } catch (error) {
                 console.error('Fetch error:', error);
 
                 // Write an error message below the button
-                const errorMessage = document.createTextNode("An error occurred. Check the console for more details.");
+                const errorMessage = document.createElement("p");
+                errorMessage.innerHTML = "An error occurred. Check the console for more details.";
                 document.body.appendChild(errorMessage);
             }
         }
     </script>
 </head>
 <body>
-    <button type="button" onclick="triggerEndpoint()">Vote for Example Category</button>
+    <img src='{image}' alt='S3 Image' style='width:300px;height:auto;'/><br>
+    <button id="button1" type="button" onclick="triggerEndpoint('{Category1}')">Vote for {Category1}</button>
+    <button id="button2" type="button" onclick="triggerEndpoint('{Category2}')">Vote for {Category2}</button>
 </body>
 </html>
