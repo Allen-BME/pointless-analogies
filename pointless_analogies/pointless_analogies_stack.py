@@ -258,7 +258,7 @@ class PointlessAnalogiesStack(Stack):
         table.grant_read_write_data(uploaded_images)
         image_bucket_notif = s3n.LambdaDestination(uploaded_images)
         image_bucket.add_event_notification(
-            s3.EventType.OBJECT_CREATED,
+            s3.EventType.OBJECT_CREATED_PUT,
             image_bucket_notif
         )
 
