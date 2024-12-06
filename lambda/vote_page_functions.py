@@ -2,6 +2,22 @@ import json
 import boto3
 import os
 
+def vote_page_handler_function(event, context):
+    # Get the HTTP method from the event
+    http_method = event['requestContext']['http']['method']
+    print(f"HTTP Method: {http_method}")
+
+    if (http_method == "GET"):
+        return vote_page_initial_function(event, context)
+    elif (http_method == "POST"):
+        return vote_page_button_function(event, context)
+    else:
+        return {
+            "statusCode": 400,
+            "body": f"Invalid request: {http_method}"
+        }
+    
+
 def vote_page_initial_function(event, context):
     # Parse the bucket name, html file name, and api endpoint from the environment
     bucket_name: str = os.environ['HTML_BUCKET_NAME']
