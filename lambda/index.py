@@ -29,6 +29,7 @@ def main_page_function(event, context):
         Key = html_file_name
     )
     main_page: str = s3_response['Body'].read().decode('utf-8')
+    
     # Get the html snippet stored in the bucket under html_snippet_name
     s3_response = client.get_object(
         Bucket = html_bucket_name,
@@ -57,6 +58,10 @@ def main_page_function(event, context):
         main_page = main_page.replace("{imagesBegin}", image_snippet_copy)
     main_page = main_page.replace("{imagesBegin}", "")
 
+    # replace variables in main page html
+    main_page = main_page.replace("{presignedUrlApi}", api_endpoint)
+    main_page = main_page.replace("{imageBucketName}", image_bucket_name)
+
     # Give the modified main page html to the user
     function_response = {
         "isBase64Encoded": False,
@@ -68,45 +73,48 @@ def main_page_function(event, context):
     }
     return function_response
 
-def lambda_handler(event, context):
-    s3_client = boto3.client('s3')  # Create an S3 client
-    bucket_name: str = os.environ['BUCKET_NAME']  # Get the bucket name from the environment
-    s3_resource = boto3.resource('s3')  # Create an S3 resource
-    bucket = s3_resource.Bucket(bucket_name)  # Set the bucket to the image bucket
+# def lambda_handler(event, context):
+#     s3_client = boto3.client('s3')  # Create an S3 client
+    
+#     html_bucket_name: str = os.environ['HTML_BUCKET_NAME']
+#     html_name: str = os.environ['HTML_FILE_NAME']
+    
+#     s3_response = s3_client.get_object(
+#         Bucket = html_bucket_name,
+#         Key = html_name
+#     )
+#     html: str = s3_response['Body'].read().decode('utf-8') # s3_response['Body'] is a StreamingBody
+    
+#     image_bucket_name: str = os.environ['IMAGE_BUCKET_NAME']  # Get the image bucket name from the environment
+#     image_s3_resource = boto3.resource('s3')  # Create an S3 resource
+#     image_bucket = image_s3_resource.Bucket(image_bucket_name)  # Set the bucket to the image bucket
 
-# List for each image
-    images = []
-    for obj in bucket.objects.all():  # Create an image URL for each image in bucket
-        images.append(f"https://{bucket_name}.s3.amazonaws.com/{obj.key}")
+#     # List for each image
+#     images = []
+#     for obj in image_bucket.objects.all():  # Create an image URL for each image in bucket
+#         images.append(f"https://{image_bucket_name}.s3.amazonaws.com/{obj.key}")
 
-    body = f'''
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <title>Pointless Analogies</title>
-    </head>
-    <body>
-        <h1>Pointless Analogies</h1>
-        <h2>Images in S3 Bucket</h2>
-    '''
-    # Log each image URL
-    for image in images:
-        print(image)
+#     # Log each image URL
+#     for image in images:
+#         print(image)
 
-    # Add each image to the webpage
-    for image in images:
-        body += f"<img src='{image}' alt='S3 Image' style='width:300px;height:auto;'/><br>\n"
+#     images_html = ""
 
-    body += '''
-    </body>
-    </html>
-    '''
+#     # Add each image to the webpage
+#     for image in images:
+#         images_html += f"<img src='{image}' alt='S3 Image' style='width:300px;height:auto;'/><br>\n"
 
-    response = {
-        'statusCode': 200,
-        'headers': {"Content-Type": "text/html",},
-        'body': body
-    }
+#     presigned_api_url = os.environ["PRESIGNED_API_URL"]
 
-    return response
+#     # add images to html
+#     html = html.replace("{imagesBegin}", images_html)
+#     html = html.replace("{presignedUrlApi}", presigned_api_url)
+#     html = html.replace("{imageBucketName}", image_bucket_name)
+
+#     response = {
+#         'statusCode': 200,
+#         'headers': {"Content-Type": "text/html",},
+#         'body': html
+#     }
+
+#     return response
