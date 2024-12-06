@@ -47,7 +47,7 @@ def main_page_function(event, context):
     for item in items:
         # Replace ImageHash in a snippet copy with the actual image hash
         image_hash = item['ImageHash']
-        image_snippet_copy = image_snippet.replace("{ImageHash}", image_hash)
+        image_snippet_copy = image_snippet.replace("{imageHash}", image_hash)
 
         # Put the S3 image into the image snippet copy
         image_url = f"https://{image_bucket_name}.s3.amazonaws.com/{image_hash}"
