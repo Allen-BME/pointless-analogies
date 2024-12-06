@@ -226,8 +226,9 @@ class PointlessAnalogiesStack(Stack):
             "CategoryInvokePolicy",
             statements=[
                 iam.PolicyStatement(
-                    actions=["lambda:InvokeFunction"],
-                    resources=[f"arn:aws:lambda:{self.region}:{self.account}:function:get-categories"]
+                    actions=["lambda:InvokeFunction", "logs:CreateLogGroup", "logs:createLogStream", "logs:PutLogEvents"],
+                    resources=[f"arn:aws:lambda:{self.region}:{self.account}:function:get-categories",
+                               f"arn:aws:logs:{self.region}:{self.account}:log-group:/aws/lambda/*"]
                 )
             ]
         )

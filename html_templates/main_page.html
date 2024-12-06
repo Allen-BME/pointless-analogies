@@ -8,13 +8,16 @@
         html, body {
             height: 100%;
             margin: 0;
-            display: flex;
+            display: block;
             justify-content: center;
             align-items: center;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
         
         #content {
             text-align: center;
+            min-height: 100vh;
         }
         
         h1 {
@@ -27,8 +30,11 @@
         }
 
         .vote-div {
-            margin-top: 20px;
-            margin-bottom: 20px;
+            width: 300px;
+            margin: 10px auto;
+            padding: 10px;
+            box-sizing: border-box;
+            text-align: center;
         }
     </style>
 </head>
