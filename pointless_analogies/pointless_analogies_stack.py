@@ -87,6 +87,38 @@ class PointlessAnalogiesStack(Stack):
         # LAMBDA FUNCTION DEFINITIONS
 
 
+        # Create a function to display the main page of images and links to vote on them
+        main_page_function = _lambda.Function(
+            scope = self,
+            id = "PointlessAnalogiesMainPageFunction",
+            function_name = "PointlessAnalogiesMainPageFunction",
+            runtime = _lambda.Runtime.PYTHON_3_11,
+            handler = "index.main_page_function",
+            code = _lambda.Code.from_asset("lambda/"),
+            timeout = Duration.seconds(60)
+        )
+        image_bucket.grant_read(main_page_function)
+        table.grant_read_data(main_page_function)
+        main_page_function.add_environment("IMAGE_BUCKET_NAME", image_bucket.bucket_name)
+        main_page_function.add_environment("HTML_BUCKET_NAME", html_bucket.bucket_name)
+        main_page_function.add_environment("HTML_FILE_NAME", "main_page.html")
+        main_page_function.add_environment("HTML_SNIPPET_NAME", "image_snippet.html")
+        main_page_function.add_environment("TABLE_NAME", table.table_name)
+
+        # Create a function to be the handler for the vote path of the HTTP API
+        vote_page_handler_function = _lambda.Function(
+            scope = self,
+            id = "PointlessAnalogiesVotePageHandlerFunction",
+            function_name = "PointlessAnalogiesVotePageHandlerFunction",
+            runtime = _lambda.Runtime.PYTHON_3_11,
+            handler = "vote_page_functions.vote_page_handler_function",
+            code = _lambda.Code.from_asset("lambda/"),
+            timeout = Duration.seconds(15)
+        )
+        html_bucket.grant_read(vote_page_handler_function)
+        vote_page_handler_function.add_environment("HTML_BUCKET_NAME", html_bucket.bucket_name)
+        vote_page_handler_function.add_environment("HTML_FILE_NAME", "vote_page.html")
+        
         # Create a function to display the voting page for a given image
         vote_page_initial_function = _lambda.Function(
             scope = self,
@@ -206,21 +238,25 @@ class PointlessAnalogiesStack(Stack):
             id = "PointlessAnalogiesHTTPApi",
             api_name = "PointlessAnalogiesHTTPApi",
             default_integration = apigw_integrations.HttpLambdaIntegration(
-                id = "PointlessAnalogiesAPIGWVotePageInitialIntegration",
-                handler = vote_page_initial_function
+                id = "PointlessAnalogiesAPIGWMainPageIntegration",
+                handler = main_page_function
             )
         )
+        main_page_function.add_environment("API_ENDPOINT", http_api.api_endpoint)
 
-        # Add a new route to http_api for vote button actions
+        # Add new routes to http_api for vote page acces and vote button actions
         http_api.add_routes(
             path = "/vote",
-            methods = [apigw.HttpMethod.POST],
+            methods = [apigw.HttpMethod.GET, apigw.HttpMethod.POST],
             integration = apigw_integrations.HttpLambdaIntegration(
-                id = "PointlessAnalogiesAPIGWVotePageButtonIntegration",
-                handler = vote_page_button_function
+                id = "PointlessAnalogiesAPIGWVotePageIntegration",
+                handler = vote_page_handler_function
             )
         )
+        vote_page_handler_function.add_environment("API_ENDPOINT", http_api.api_endpoint)
         vote_page_initial_function.add_environment("API_ENDPOINT", http_api.api_endpoint)
+        vote_page_button_function.add_environment("API_ENDPOINT", http_api.api_endpoint)
+        
 
 
         # # Create a lambda function to add an initial image to the database
