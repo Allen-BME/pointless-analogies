@@ -4,10 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pointless Analogies Main Page</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #content {
+            text-align: center;
+        }
+        
+        h1 {
+            margin-top: 100px;
+        }
+
+        .h2-div {
+            margin-top: 40px;
+            margin-bottom: 30px;
+        }
+
+        .vote-div {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 <body>
     <div id = "content">
         <h1>Welcome to Pointless Analogies!</h1>
+        <div class="h2-div">
         <h2>Upload your own image</h2>
         <form id="uploadForm">
             <input type="file" id="fileInput" name="file" accept="image/png, image/jpeg" required>
@@ -94,8 +122,11 @@
                 }
             });
         </script>
+        </div>
+        <div class="h2-div">
         <h2>Select an image and cast your vote!</h2>
         {imagesBegin}
+        </div>
     </div>
 </body>
 </html>
