@@ -8,6 +8,70 @@
 <body>
     <div id = "content">
         <h1>Welcome to Pointless Analogies!</h1>
+        <h2>Upload your own image</h2>
+        <form id="uploadForm">
+            <input type="file" id="fileInput" name="file" accept="image/png, image/jpeg" required>
+            <button type="submit">Upload Image</button>
+        </form>
+        <script>
+            async function validateFileInput(fileInput) {
+                const file = fileInput.files[0];
+
+                if (!file) {
+                    alert("No file selected.");
+                    return false;
+                }
+
+                const validTypes = ['image/png', 'image/jpeg'];
+                if (!validTypes.includes(file.type)) {
+                    alert("Invalid file type. Please select a PNG or JPEG file.");
+                    return false;
+                }
+
+                return true;
+            }
+            
+            async function getPresignedUrl(objectName) {
+                const apiUrl = '{presignedUrlApi}/generate-presigned-url';
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        objectName: objectName,
+                    })
+                });
+                const data = await response.json();
+                return data.url;
+            }
+
+            async function uploadImage(file) {
+                const presignedUrl = await getPresignedUrl(file.name);
+                const response = await fetch(presignedUrl, {
+                    method: 'PUT',
+                    body: file
+                });
+
+                if (response.ok) {
+                    console.log('Image uploaded successfully');
+                } else {
+                    console.error('Image upload failed', response.status, response.statusText);
+                }
+            }
+
+            document.getElementById('uploadForm').addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const fileInput = document.getElementById('fileInput');
+                const file = fileInput.files[0];
+                if (await validateFileInput(fileInput)) {
+                    const file = fileInput.files[0];
+                    if (file) {
+                        await uploadImage(file);
+                    }
+                }
+            });
+        </script>
         <h2>Select an image and cast your vote!</h2>
         {imagesBegin}
     </div>
