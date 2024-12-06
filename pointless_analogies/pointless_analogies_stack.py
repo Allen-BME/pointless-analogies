@@ -11,7 +11,9 @@ from aws_cdk import (
     aws_s3_notifications as s3n,
     aws_iam as iam,
     aws_dynamodb as dynamodb,
+    aws_logs as logs,
     custom_resources as cr,
+    CfnOutput,
 )
 from constructs import Construct
 import json
@@ -42,7 +44,24 @@ class PointlessAnalogiesStack(Stack):
             public_read_access=True,  # Pictures are publicly accessible
             removal_policy=RemovalPolicy.DESTROY,  # Delete all pictures when stack is deleted
             auto_delete_objects=True,  # Auto-delete images when stack is deleted
-            bucket_name="pointless-analogies-image-bucket"  # Picture bucket name
+            bucket_name="pointless-analogies-image-bucket",  # Picture bucket name
+            cors=[s3.CorsRule(
+                allowed_headers=["*"],
+                allowed_methods=[
+                    s3.HttpMethods.PUT,
+                    s3.HttpMethods.GET,
+                    s3.HttpMethods.POST],
+                allowed_origins=["*"])
+            ]
+        )
+
+        # Add a bucket policy to allow s3:PutObject
+        image_bucket.add_to_resource_policy(
+            iam.PolicyStatement(
+                actions=["s3:PutObject"],
+                resources=[f"{image_bucket.bucket_arn}/*"],
+                principals=[iam.AnyPrincipal()]
+            )
         )
 
         # Create a bucket to store template HTML files
@@ -146,7 +165,7 @@ class PointlessAnalogiesStack(Stack):
         vote_page_button_function.add_environment("HTML_BUCKET_NAME", html_bucket.bucket_name)
 
         # Add Lambda function that serves as site index
-        test_fun = _lambda.Function(
+        index_function = _lambda.Function(
             self,
             "Index",  # Lambda ID
             runtime=_lambda.Runtime.PYTHON_3_11,  # Python version
@@ -159,10 +178,14 @@ class PointlessAnalogiesStack(Stack):
             # Add the bucket name to the environment.
             # This is needed as the bucket name that cdk generates is random
             environment={
-                "BUCKET_NAME": image_bucket.bucket_name 
+                "IMAGE_BUCKET_NAME": image_bucket.bucket_name,
+                "HTML_BUCKET_NAME": html_bucket.bucket_name,
+                "HTML_FILE_NAME": "main_page.html", 
             }
         )
-        image_bucket.grant_read(test_fun)
+        image_bucket.grant_read(index_function)
+        html_bucket.grant_read(index_function)
+        
         # Create a policy that gives the ability to list bucket contents of the
         # image bucket
         list_bucket_policy = iam.PolicyStatement(
@@ -170,7 +193,7 @@ class PointlessAnalogiesStack(Stack):
             resources=[image_bucket.bucket_arn]  # for this bucket
         )
         # Add the defined policy to the lambda function
-        test_fun.role.attach_inline_policy(
+        index_function.role.attach_inline_policy(
             iam.Policy(
                 self,
                 "ListBucketPolicy",  # Policy ID
@@ -228,9 +251,20 @@ class PointlessAnalogiesStack(Stack):
             image_bucket_notif
         )
 
+        # function to return presigned URL for S3
+        generate_presigned_url_function = _lambda.Function(
+            self,
+            "GeneratePresignedUrlFunction",
+            runtime=_lambda.Runtime.PYTHON_3_11,
+            handler="generate_presigned_url.lambda_handler",
+            code=_lambda.Code.from_asset("lambda"),
+            environment={
+                "BUCKET_NAME": image_bucket.bucket_name,
+            }
+        )
+        image_bucket.grant_put(generate_presigned_url_function)
 
         # HTTP API DEFINITION AND ROUTES
-
 
         # Create an HTTP API to access the lambda functions
         http_api = apigw.HttpApi(
@@ -240,7 +274,27 @@ class PointlessAnalogiesStack(Stack):
             default_integration = apigw_integrations.HttpLambdaIntegration(
                 id = "PointlessAnalogiesAPIGWMainPageIntegration",
                 handler = main_page_function
-            )
+            ),
+            cors_preflight={
+                "allow_origins": ["*"],
+                "allow_methods": [
+                    apigw.CorsHttpMethod.POST,
+                    apigw.CorsHttpMethod.GET,
+                    apigw.CorsHttpMethod.PUT,
+                    ],
+                "allow_headers": ["*"]
+            }       
+        )
+        main_page_function.add_environment("API_ENDPOINT", http_api.api_endpoint)
+
+        # Add a new route to http_api for upload image
+        http_api.add_routes(
+            path="/generate-presigned-url",
+            methods=[apigw.HttpMethod.POST],
+            integration=apigw_integrations.HttpLambdaIntegration(
+                id="PointlessAnalogiesAPIGWGeneratePresignedUrlIntegration",
+                handler=generate_presigned_url_function
+            ),
         )
         main_page_function.add_environment("API_ENDPOINT", http_api.api_endpoint)
 
@@ -258,6 +312,7 @@ class PointlessAnalogiesStack(Stack):
         vote_page_button_function.add_environment("API_ENDPOINT", http_api.api_endpoint)
         
 
+        CfnOutput(self, id="IndexApiEndpoint", value=http_api.api_endpoint)
 
         # # Create a lambda function to add an initial image to the database
         # initial_image = _lambda.Function(
