@@ -266,9 +266,6 @@ class PointlessAnalogiesStack(Stack):
 
         # HTTP API DEFINITION AND ROUTES
 
-        # log group for http api
-        api_logs = logs.LogGroup(self, "ApiLogs")        
-
         # Create an HTTP API to access the lambda functions
         http_api = apigw.HttpApi(
             scope = self,
