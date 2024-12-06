@@ -135,8 +135,12 @@ class PointlessAnalogiesStack(Stack):
             timeout = Duration.seconds(15)
         )
         html_bucket.grant_read(vote_page_handler_function)
+        image_bucket.grant_read(vote_page_handler_function)
+        table.grant_full_access(vote_page_handler_function)
         vote_page_handler_function.add_environment("HTML_BUCKET_NAME", html_bucket.bucket_name)
         vote_page_handler_function.add_environment("HTML_FILE_NAME", "vote_page.html")
+        vote_page_handler_function.add_environment("IMAGE_BUCKET_NAME", image_bucket.bucket_name)
+        vote_page_handler_function.add_environment("TABLE_NAME", table.table_name)
         
         # Create a function to display the voting page for a given image
         vote_page_initial_function = _lambda.Function(
@@ -149,8 +153,12 @@ class PointlessAnalogiesStack(Stack):
             timeout = Duration.seconds(30)
         )
         html_bucket.grant_read(vote_page_initial_function)
+        image_bucket.grant_read(vote_page_initial_function)
+        table.grant_read_data(vote_page_initial_function)
         vote_page_initial_function.add_environment("HTML_BUCKET_NAME", html_bucket.bucket_name)
         vote_page_initial_function.add_environment("HTML_FILE_NAME", "vote_page.html")
+        vote_page_initial_function.add_environment("IMAGE_BUCKET_NAME", image_bucket.bucket_name)
+        vote_page_initial_function.add_environment("TABLE_NAME", table.table_name)
 
         # Create a function to process votes and display the vote count for a given image
         vote_page_button_function = _lambda.Function(
@@ -162,7 +170,9 @@ class PointlessAnalogiesStack(Stack):
             code = _lambda.Code.from_asset("lambda/"),
             timeout = Duration.seconds(15)
         )
+        table.grant_full_access(vote_page_button_function)
         vote_page_button_function.add_environment("HTML_BUCKET_NAME", html_bucket.bucket_name)
+        vote_page_button_function.add_environment("TABLE_NAME", table.table_name)
 
         # Add Lambda function that serves as site index
         index_function = _lambda.Function(
