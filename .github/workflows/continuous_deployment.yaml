@@ -6,10 +6,10 @@ name: AWS Continuous Deployment
 on:
   push:
     branches:
-      - actions_cd
+      - main
   pull_request:
     branches:
-      - actions_cd
+      - main
 
 run-name: "Continuous Deployment (@${{ github.actor }})"
 
