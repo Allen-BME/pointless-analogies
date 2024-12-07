@@ -7,9 +7,6 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 run-name: "Continuous Deployment (@${{ github.actor }})"
 
@@ -29,11 +26,9 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
           AWS_DEFAULT_REGION: us-east-1
-        with:
-          status: ${{ job.status }}
   build:
     needs: check
-    if: needs.check.outputs.status == 'success'
+    if: needs.check.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository 
