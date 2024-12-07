@@ -20,7 +20,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v3
         with: 
-          node-version: "16"
+          node-version: "22"
       - name: Install Python dependencies and CDK
         run: |
           python -m pip install --upgrade pip
@@ -29,9 +29,10 @@ jobs:
       # using an AWS access key stored in GitHub secrets
       # given more time, using GitHub OIDC and AWS identity provider would be better
       - name: Deploy CDK Stack
-        run: cdk deploy PointlessAnalogiesStack --require-approval never
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: us-east-1
+          # CDK_DEFAULT_ACCOUNT: ${{ secrets.AWS_ACCOUNT_ID }}
+        run: cdk deploy PointlessAnalogiesStack --require-approval never
           
