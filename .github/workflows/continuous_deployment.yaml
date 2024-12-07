@@ -14,14 +14,9 @@ on:
 run-name: "Continuous Deployment (@${{ github.actor }})"
 
 jobs:
-  build:
+  check:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write # This is required for requesting the JWT
-      contents: read  # This is required for actions/checkout
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
       - name: Check if stack is deployed
         id: check_stack
         run: |
@@ -31,9 +26,15 @@ jobs:
             exit 0
           fi
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
+  build:
+    needs: check
+    if: needs.check.outputs.status == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository 
+        uses: actions/checkout@v3
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
