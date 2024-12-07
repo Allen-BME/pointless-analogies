@@ -33,10 +33,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           npm install -g aws-cdk
-      - name: Deploy CDK Stack
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           managed-session-policies: arn:aws:iam::aws:policy/AdministratorAccess
+      - name: Deploy CDK Stack
         # env:
         #   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         #   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
