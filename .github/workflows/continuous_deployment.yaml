@@ -1,4 +1,4 @@
-name: AWS CD
+name: AWS Continuous Deployment
 
 on:
   push:
@@ -7,14 +7,15 @@ on:
   pull-request:
     branches:
       - actions_cd
-  workflow_dispatch
+
+run-name: "Continuous Deployment: ${{ github.head_ref }} by @${{ github.actor }}"
 
 jobs:
-  actions_test:
+  test_cd:
     runs-on: ubuntu-latest
     steps:
-      - name: Test GitHub Actions
-        run: echo "Test of GitHub Actions"
+      - name: Test CD
+        run: echo "Test of Continuous Deployment"
 
 # jobs:
 #   build:

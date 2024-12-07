@@ -1,0 +1,11 @@
+name: AWS Manual CDK Deploy
+
+on:
+  workflow_dispatch
+
+jobs:
+  actions_test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test Manual Deploy
+        run: echo "Test of Manual CDK Deploy"
