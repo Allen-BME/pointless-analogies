@@ -13,6 +13,8 @@ run-name: "Continuous Deployment (@${{ github.actor }})"
 jobs:
   check:
     runs-on: ubuntu-latest
+    outputs:
+      check-result: ${{ steps.check_stack.outputs.result }}
     steps:
       - name: Check if stack is deployed
         id: check_stack
@@ -20,15 +22,17 @@ jobs:
           STACK_NAME="PointlessAnalogiesStack"
           if ! aws cloudformation describe-stacks --stack-name $STACK_NAME; then
             echo "Stack $STACK_NAME does not exist. Exiting."
-            exit 1
+            echo "test=notdeployed" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+          echo "test=exists" >> "$GITHUB_OUTPUT"
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
           AWS_DEFAULT_REGION: us-east-1
   build:
     needs: check
-    if: needs.check.result == 'success'
+    if: needs.check.outputs.check-result == 'deployed'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository 
