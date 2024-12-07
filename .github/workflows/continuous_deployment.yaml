@@ -20,7 +20,7 @@ jobs:
           STACK_NAME="PointlessAnalogiesStack"
           if ! aws cloudformation describe-stacks --stack-name $STACK_NAME; then
             echo "Stack $STACK_NAME does not exist. Exiting."
-            exit 0
+            exit 1
           fi
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
