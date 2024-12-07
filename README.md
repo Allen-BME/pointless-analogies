@@ -11,6 +11,12 @@ This app uses a serverless architecture for minimal cost and easy scalability.
 
 ## Automated Deployment
 
+This app uses CDK for automated deployment. The CDK code generates a cloudformation template, which is used to deploy the Pointless Analogies Stack. Image uploading for the purposes of testing was also automated with the `upload_S3_test_images.sh` script. 
+
+GitHub Actions was used to further simplify automated deployment. The "AWS Manual CDK Deploy" action can be run from the Actions page on the GitHub repo. This action automatically runs `cdk deploy` on a linux machine using the main branch, which deploys the current production code.
+
+Continuous deployment has been implemented using GitHub Actions. When the main branch of the GitHub repository is either (1) pushed to or (2) receives a pull request, the "AWS Continuous Deployment" Action is automatically run. This action automatically runs `cdk deploy` on the updated code. If the stack is not currently active, however, this action will not deploy. In other words, the only action that will activate the stack if it is not yet active is "AWS Manual CDK Deploy". 
+
 ## Security
 
 ## Source Control

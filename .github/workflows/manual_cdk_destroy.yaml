@@ -1,0 +1,22 @@
+# Manually destroy the CDK Stack defined by the main branch of the repo
+
+name: AWS Manual Stack Destroy
+
+on:
+  workflow_dispatch:
+
+run-name: "Manual Stack Destroy (@${{ github.actor }})"
+
+jobs:
+  destroy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Destroy PointlessAnalogiesStack
+        run: |
+            STACK_NAME="PointlessAnalogiesStack"
+            aws cloudformation delete-stack --stack-name $STACK_NAME
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+        
