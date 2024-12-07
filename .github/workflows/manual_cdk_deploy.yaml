@@ -34,5 +34,5 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: us-east-1
           CDK_DEFAULT_ACCOUNT: ${{ secrets.AWS_ACCOUNT_ID }}
-        run: cdk deploy PointlessAnalogiesStack --require-approval never --verbose
+        run: cdk deploy PointlessAnalogiesStack --require-approval never
           
