@@ -40,20 +40,23 @@
                     const voteChoiceMessage = document.createTextNode(data.voteChoiceMessage);
                     button1.replaceWith(message);
                     button2.replaceWith(voteChoiceMessage);
-                    document.body.appendChild(`There are currently ${data.category1Count} votes for {Category1} and ${data.category2Count} votes for {Category2}.`);
-                    
+                    const voteCountsMessage = document.createElement("p");
+                    voteCountsMessage.innerHTML = `There are currently ${data.category1Count} votes for {Category1} and ${data.category2Count} votes for {Category2}.`;
+                    document.body.appendChild(voteCountsMessage);                    
                 } else {
                     console.error('Error:', response.status, response.statusText);
 
                     // Write an error message below the button
-                    const failureMessage = document.createTextNode("Error occurred. Please try again.");
+                    const failureMessage = document.createElement("p");
+                    failureMessage.innerHTML = "Error occurred. Please try again.";
                     document.body.appendChild(failureMessage);
                 }
             } catch (error) {
                 console.error('Fetch error:', error);
 
                 // Write an error message below the button
-                const errorMessage = document.createTextNode("An error occurred. Check the console for more details.");
+                const errorMessage = document.createElement("p");
+                errorMessage.innerHTML = "An error occurred. Check the console for more details.";
                 document.body.appendChild(errorMessage);
             }
         }
