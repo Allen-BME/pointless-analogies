@@ -36,6 +36,8 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
+          audience: sts.amazonaws.com.cn
+          aws-region: us-east-1
           managed-session-policies: arn:aws:iam::aws:policy/AdministratorAccess
       - name: Deploy CDK Stack
         # env:
