@@ -1,7 +1,8 @@
 name: AWS Manual CDK Deploy
 
 on:
-  workflow_dispatch
+  push: # temporary
+  workflow_dispatch:
 
 jobs:
   actions_test:

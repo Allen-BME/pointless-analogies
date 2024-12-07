@@ -8,7 +8,7 @@ on:
     branches:
       - actions_cd
 
-run-name: "Continuous Deployment: ${{ github.head_ref }} by @${{ github.actor }}"
+run-name: "Continuous Deployment (@${{ github.actor }})"
 
 jobs:
   test_cd:
