@@ -22,6 +22,8 @@ jobs:
           node-version: "16"
       - name: Install Python dependencies and CDK
         run: |
+          pwd
+          ls
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           npm install -g aws-cdk
