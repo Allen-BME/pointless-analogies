@@ -1,3 +1,6 @@
+# Automatically deploy stack upon push or pull request to main branch if the stack is already active
+# Otherwise, the stack must be deployed manually when it's not already active. 
+
 name: AWS Continuous Deployment
 
 on:
