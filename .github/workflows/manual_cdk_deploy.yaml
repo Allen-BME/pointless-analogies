@@ -5,6 +5,8 @@ name: AWS Manual CDK Deploy
 on:
   workflow_dispatch:
 
+run-name: "Manual CDK Deploy (@${{ github.actor }})"
+
 jobs:
   build:
     runs-on: ubuntu-latest
