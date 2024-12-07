@@ -1,9 +1,13 @@
-name: AWS CI/CD
+name: AWS CD
 
 on:
   push:
     branches:
       - actions_cd
+  pull-request:
+    branches:
+      - actions_cd
+  workflow_dispatch
 
 jobs:
   actions_test:
@@ -29,6 +33,12 @@ jobs:
 #           python -m pip install --upgrade pip
 #           pip install -r requirements
 #           npm install -g aws-cdk
+#       - name: Configure AWS credentials
+#                 uses: aws-actions/configure-aws-credentials@master
+#                 with:
+#                   aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+#                   aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+#                   aws-region: "us-east-1"
 #       - name: Deploy to AWS
 #           run: cdk deploy --app="python3 ${PWD}/app.py" --require-approval=never
 #       - name: Destroy stack
