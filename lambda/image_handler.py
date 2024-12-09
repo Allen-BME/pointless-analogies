@@ -54,7 +54,11 @@ def lambda_handler(event, context):
             }
         )
 
+        print(table_response)
+
+        print(f"copying object with key={key} into bucket={bucket} and giving it a new key={new_key}")
         s3.copy_object(Bucket=bucket, Key=new_key, CopySource=f"{bucket}/{key}")
+        print(f"deleting object with key={key} from bucket={bucket}")
         s3.delete_object(Bucket=bucket, Key=key)
     
     return {

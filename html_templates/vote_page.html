@@ -8,7 +8,7 @@
         // JavaScript function to call the API Gateway endpoint
         async function triggerEndpoint(voteChoice) {
             // apiEndpoint is replaced with the actual endpoint to call for voting buttons
-            const apiUrl = {apiEndpoint};
+            const apiUrl = "{apiEndpoint}";
             const ImageHash = {ImageHash}
 
             // Set variables to refer to the vote buttons
@@ -20,7 +20,7 @@
             button2.disabled = true;
 
             try {
-                const response = await fetch(apiUrl, {
+                const response = await fetch(`${apiUrl}/vote`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -66,5 +66,8 @@
     <img src='{image}' alt='S3 Image' style='width:300px;height:auto;'/><br>
     <button id="button1" type="button" onclick="triggerEndpoint('{Category1}')">Vote for {Category1}</button>
     <button id="button2" type="button" onclick="triggerEndpoint('{Category2}')">Vote for {Category2}</button>
+    <a href = "{apiEndpoint}" target="_self">
+        <button type="button">Return to the main page</button>
+    </a>
 </body>
 </html>
