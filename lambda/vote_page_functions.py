@@ -61,7 +61,7 @@ def vote_page_initial_function(event, context):
     html: str = s3_response['Body'].read().decode('utf-8') # s3_response['Body'] is a StreamingBody
 
     # Replace {apiEndpoint} in the html with the actual endpoint
-    html = html.replace("{apiEndpoint}", f'"{api_endpoint}/vote"')
+    html = html.replace("{apiEndpoint}", api_endpoint)
     # Replace {image} in the html with the actual image address
     image_url = f"https://{image_bucket_name}.s3.amazonaws.com/{image_hash}"
     html = html.replace("{image}", image_url)
