@@ -4,6 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vote for a Category!</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            display: block;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        
+        #content {
+            text-align: center;
+            min-height: 100vh;
+        }
+        
+        h1 {
+            margin-top: 100px;
+        }
+
+        .h2-div {
+            margin-top: 40px;
+            margin-bottom: 30px;
+        }
+
+        .vote-div {
+            width: 300px;
+            margin: 10px auto;
+            padding: 10px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+    </style>
     <script>
         // JavaScript function to call the API Gateway endpoint
         async function triggerEndpoint(voteChoice) {
@@ -42,14 +75,14 @@
                     button2.replaceWith(voteChoiceMessage);
                     const voteCountsMessage = document.createElement("p");
                     voteCountsMessage.innerHTML = `There are currently ${data.category1Count} votes for {Category1} and ${data.category2Count} votes for {Category2}.`;
-                    document.body.appendChild(voteCountsMessage);                    
+                    document.getElementById("vote-div").appendChild(voteCountsMessage);                    
                 } else {
                     console.error('Error:', response.status, response.statusText);
 
                     // Write an error message below the button
                     const failureMessage = document.createElement("p");
                     failureMessage.innerHTML = "Error occurred. Please try again.";
-                    document.body.appendChild(failureMessage);
+                    document.getElementById("vote-div").appendChild(failureMessage)
                 }
             } catch (error) {
                 console.error('Fetch error:', error);
@@ -57,17 +90,23 @@
                 // Write an error message below the button
                 const errorMessage = document.createElement("p");
                 errorMessage.innerHTML = "An error occurred. Check the console for more details.";
-                document.body.appendChild(errorMessage);
+                document.getElementById("vote-div").appendChild(errorMessage);
+
             }
         }
     </script>
 </head>
 <body>
-    <img src='{image}' alt='S3 Image' style='width:300px;height:auto;'/><br>
-    <button id="button1" type="button" onclick="triggerEndpoint('{Category1}')">Vote for {Category1}</button>
-    <button id="button2" type="button" onclick="triggerEndpoint('{Category2}')">Vote for {Category2}</button>
-    <a href = "{apiEndpoint}" target="_self">
-        <button type="button">Return to the main page</button>
-    </a>
+    <div id = "content">
+        <h1>Which of these categories is this image closer to?</h1>
+        <div class="h2-div" id="vote-div">
+        <img src='{image}' alt='S3 Image' style='width:300px;height:auto;'/><br>
+        <button id="button1" type="button" onclick="triggerEndpoint('{Category1}')">Vote for {Category1}</button>
+        <button id="button2" type="button" onclick="triggerEndpoint('{Category2}')">Vote for {Category2}</button>
+        <a href = "{apiEndpoint}" target="_self">
+            <button type="button">Return to the main page</button>
+        </a>
+        </div>
+    </div>
 </body>
 </html>
