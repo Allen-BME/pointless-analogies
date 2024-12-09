@@ -8,9 +8,9 @@ def vote_page_handler_function(event, context):
     http_method = event['requestContext']['http']['method']
     print(f"HTTP Method: {http_method}")
 
-    if (http_method == "GET"):
+    if http_method == "GET":
         return vote_page_initial_function(event, context)
-    elif (http_method == "POST"):
+    elif http_method == "POST":
         return vote_page_button_function(event, context)
     else:
         return {
