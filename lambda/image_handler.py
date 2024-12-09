@@ -2,8 +2,19 @@ import boto3
 import uuid
 import os
 import json
+from urllib.parse import unquote
+from urllib.parse import unquote_plus
+from botocore.exceptions import ClientError
 
 s3 = boto3.client('s3')
+
+def delete_table_item(table, key: str):
+    table_response = table.delete_item(
+            Item = {
+                "ImageHash": key,
+            }
+        )
+    print(table_response)
 
 def lambda_handler(event, context):
     dynamodb = boto3.resource('dynamodb')
@@ -11,13 +22,18 @@ def lambda_handler(event, context):
     TABLE_NAME = os.environ['TABLE_NAME']
     table = dynamodb.Table(TABLE_NAME)
 
+    # Print event for debugging
+    print(json.dumps(event, indent = 2))
+
     # Pre-define variables to be accessable to return function
     response = 0
     table_response = 0
 
     for record in event['Records']:
         bucket = record['s3']['bucket']['name']
+        print(f"The bucket name is {bucket}")
         key: str = record['s3']['object']['key']
+        print(f"The name of the object put into the bucket is {key}")
 
         # Quick fix to prevent the lambda from trying to rename an already
         # renamed file
@@ -54,12 +70,46 @@ def lambda_handler(event, context):
             }
         )
 
-        print(table_response)
-
-        print(f"copying object with key={key} into bucket={bucket} and giving it a new key={new_key}")
-        s3.copy_object(Bucket=bucket, Key=new_key, CopySource=f"{bucket}/{key}")
-        print(f"deleting object with key={key} from bucket={bucket}")
-        s3.delete_object(Bucket=bucket, Key=key)
+        # If the original object filename has a space or other character that can't be used in a url,
+        # the filename is sent in the event with some characters replaced. This try/catch mechanism
+        # deals with that problem
+        try:
+            print(f"copying object with key={key} into bucket={bucket} and giving it a new key={new_key}")
+            s3.copy_object(Bucket=bucket, Key=new_key, CopySource=f"{bucket}/{key}")
+            print(f"deleting object with key={key} from bucket={bucket}")
+            s3.delete_object(Bucket=bucket, Key=key)  
+        except ClientError as e:
+            # There was an invalid character in the original filename. Try using unquote to fix the error
+            if e.response['Error']['Code'] == 'NoSuchKey':
+                print(f"The key {key} does not match any keys in the image bucket. Replacing url characters and trying again")
+                try:
+                    key = unquote(key)
+                    print(f"copying object with key={key} into bucket={bucket} and giving it a new key={new_key}")
+                    s3.copy_object(Bucket=bucket, Key=new_key, CopySource=f"{bucket}/{key}")
+                    print(f"deleting object with key={key} from bucket={bucket}")
+                    s3.delete_object(Bucket=bucket, Key=key)  
+                except ClientError as e:
+                    # After using unquote there was still an invalid character. Try using unquote_plus to fix the error
+                    if e.response['Error']['Code'] == 'NoSuchKey':
+                        print(f"The key {key} does not match any keys in the image bucket. Replacing + characters and trying again")
+                        try:
+                            key = unquote_plus(key)
+                            print(f"copying object with key={key} into bucket={bucket} and giving it a new key={new_key}")
+                            s3.copy_object(Bucket=bucket, Key=new_key, CopySource=f"{bucket}/{key}")
+                            print(f"deleting object with key={key} from bucket={bucket}")
+                            s3.delete_object(Bucket=bucket, Key=key)  
+                        except ClientError as e:
+                            print(f"An unexpected error occurred: {e}")
+                            delete_table_item(new_key)
+                    else:
+                        print(f"An unexpected error occurred: {e}")
+                        delete_table_item(new_key)
+            else:
+                print(f"An unexpected error occurred: {e}")
+                delete_table_item(new_key)
+        except Exception as e:
+            # There was an unexpected error
+            print(f"An unexpected error occurred: {e}")         
     
     return {
         "statusCode": 200,
