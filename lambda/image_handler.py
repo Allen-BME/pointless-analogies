@@ -16,7 +16,7 @@ def delete_table_item(table, key: str):
         )
     print(table_response)
 
-def lambda_handler(event, context):
+def generate_image_hash_function(event, context):
     dynamodb = boto3.resource('dynamodb')
     client = boto3.client('lambda')
     TABLE_NAME = os.environ['TABLE_NAME']

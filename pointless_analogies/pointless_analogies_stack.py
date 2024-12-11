@@ -140,75 +140,6 @@ class PointlessAnalogiesStack(Stack):
         vote_page_handler_function.add_environment("HTML_FILE_NAME", "vote_page.html")
         vote_page_handler_function.add_environment("IMAGE_BUCKET_NAME", image_bucket.bucket_name)
         vote_page_handler_function.add_environment("TABLE_NAME", table.table_name)
-        
-        # Create a function to display the voting page for a given image
-        # vote_page_initial_function = _lambda.Function(
-        #     scope = self,
-        #     id = "PointlessAnalogiesVotePageInitialFunction",
-        #     function_name = "PointlessAnalogiesVotePageInitialFunction",
-        #     runtime = _lambda.Runtime.PYTHON_3_11,
-        #     handler = "vote_page_functions.vote_page_initial_function",
-        #     code = _lambda.Code.from_asset("lambda/"),
-        #     timeout = Duration.seconds(30)
-        # )
-        # html_bucket.grant_read(vote_page_initial_function)
-        # image_bucket.grant_read(vote_page_initial_function)
-        # table.grant_read_data(vote_page_initial_function)
-        # vote_page_initial_function.add_environment("HTML_BUCKET_NAME", html_bucket.bucket_name)
-        # vote_page_initial_function.add_environment("HTML_FILE_NAME", "vote_page.html")
-        # vote_page_initial_function.add_environment("IMAGE_BUCKET_NAME", image_bucket.bucket_name)
-        # vote_page_initial_function.add_environment("TABLE_NAME", table.table_name)
-
-        # Create a function to process votes and display the vote count for a given image
-        # vote_page_button_function = _lambda.Function(
-        #     scope = self,
-        #     id = "PointlessAnalogiesVotePageButtonFunction",
-        #     function_name = "PointlessAnalogiesVotePageButtonFunction",
-        #     runtime = _lambda.Runtime.PYTHON_3_11,
-        #     handler = "vote_page_functions.vote_page_button_function",
-        #     code = _lambda.Code.from_asset("lambda/"),
-        #     timeout = Duration.seconds(15)
-        # )
-        # table.grant_full_access(vote_page_button_function)
-        # vote_page_button_function.add_environment("HTML_BUCKET_NAME", html_bucket.bucket_name)
-        # vote_page_button_function.add_environment("TABLE_NAME", table.table_name)
-
-        # Add Lambda function that serves as site index
-        # index_function = _lambda.Function(
-        #     self,
-        #     "Index",  # Lambda ID
-        #     runtime=_lambda.Runtime.PYTHON_3_11,  # Python version
-        #     handler="index.lambda_handler",  # Name of the method within index.py
-        #     code=_lambda.Code.from_asset("lambda/"),  # Specify source location
-        #     # Increase lambda function timeout to 30 seconds.
-        #     # This is needed since getting the objects from S3 takes more time than
-        #     # the default 25 ms
-        #     timeout=Duration.seconds(30),
-        #     # Add the bucket name to the environment.
-        #     # This is needed as the bucket name that cdk generates is random
-        #     environment={
-        #         "IMAGE_BUCKET_NAME": image_bucket.bucket_name,
-        #         "HTML_BUCKET_NAME": html_bucket.bucket_name,
-        #         "HTML_FILE_NAME": "main_page.html", 
-        #     }
-        # )
-        # image_bucket.grant_read(index_function)
-        # html_bucket.grant_read(index_function)
-        
-        # Create a policy that gives the ability to list bucket contents of the
-        # image bucket
-        # list_bucket_policy = iam.PolicyStatement(
-        #     actions=["s3:ListBucket"],  # Allowed actions...
-        #     resources=[image_bucket.bucket_arn]  # for this bucket
-        # )
-        # Add the defined policy to the lambda function
-        # index_function.role.attach_inline_policy(
-        #     iam.Policy(
-        #         self,
-        #         "ListBucketPolicy",  # Policy ID
-        #         statements=[list_bucket_policy]  # Add permissions
-        #     )
-        # )
 
         # Function to return two random categories
         get_categories_function = _lambda.Function(
@@ -221,43 +152,23 @@ class PointlessAnalogiesStack(Stack):
             function_name="pa-get-categories-function"
         )
 
-        # category_role = iam.Role(
-        #     self,
-        #     "CategoryRole",
-        #     assumed_by=iam.ServicePrincipal("lambda.amazonaws.com"),
-        #     managed_policies=[
-        #         iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AWSLambdaBasicExecutionRole"),
-        #         iam.ManagedPolicy.from_aws_managed_policy_name("service-role/AWSLambdaVPCAccessExecutionRole")
-        #     ]
-        # )
-        # category_invoke_policy = iam.Policy(
-        #     self,
-        #     "CategoryInvokePolicy",
-        #     statements=[
-        #         iam.PolicyStatement(
-        #             actions=["lambda:InvokeFunction", "logs:CreateLogGroup", "logs:createLogStream", "logs:PutLogEvents"],
-        #             resources=[f"arn:aws:lambda:{self.region}:{self.account}:function:get-categories",
-        #                        f"arn:aws:logs:{self.region}:{self.account}:log-group:/aws/lambda/*"]
-        #         )
-        #     ]
-        # )
-        # category_role.attach_inline_policy(category_invoke_policy)
         # Create a function to make a unique hash for each image uploaded to the image bucket
-        uploaded_images = _lambda.Function(
-            self,
-            "Uploaded_images",
+        generate_image_hash_function = _lambda.Function(
+            scope = self,
+            id = "pa-generate-image-hash-function",
+            function_name = "pa-generate-image-hash-function",
             runtime=_lambda.Runtime.PYTHON_3_11,
-            handler="image_handler.lambda_handler",
+            handler="image_handler.generate_image_hash_function",
             code=_lambda.Code.from_asset("lambda/"),
             timeout=Duration.seconds(30),
             # role=category_role
         )
-        get_categories_function.grant_invoke(uploaded_images)
-        image_bucket.grant_read_write(uploaded_images)
-        uploaded_images.add_environment("TABLE_NAME", table.table_name)
-        uploaded_images.add_environment("CATEGORIES_FUNCTION_NAME", get_categories_function.function_name)
-        table.grant_read_write_data(uploaded_images)
-        image_bucket_notif = s3n.LambdaDestination(uploaded_images)
+        get_categories_function.grant_invoke(generate_image_hash_function)
+        image_bucket.grant_read_write(generate_image_hash_function)
+        generate_image_hash_function.add_environment("TABLE_NAME", table.table_name)
+        generate_image_hash_function.add_environment("CATEGORIES_FUNCTION_NAME", get_categories_function.function_name)
+        table.grant_read_write_data(generate_image_hash_function)
+        image_bucket_notif = s3n.LambdaDestination(generate_image_hash_function)
         image_bucket.add_event_notification(
             event = s3.EventType.OBJECT_CREATED_PUT,
             dest = image_bucket_notif
@@ -281,10 +192,10 @@ class PointlessAnalogiesStack(Stack):
         # Create an HTTP API to access the lambda functions
         http_api = apigw.HttpApi(
             scope = self,
-            id = "PointlessAnalogiesHTTPApi",
-            api_name = "PointlessAnalogiesHTTPApi",
+            id = "pa-http-api",
+            api_name = "pa-http-api",
             default_integration = apigw_integrations.HttpLambdaIntegration(
-                id = "PointlessAnalogiesAPIGWMainPageIntegration",
+                id = "pa-apigw-main-page-integration",
                 handler = main_page_function
             ),
             cors_preflight={
@@ -304,7 +215,7 @@ class PointlessAnalogiesStack(Stack):
             path="/generate-presigned-url",
             methods=[apigw.HttpMethod.POST],
             integration=apigw_integrations.HttpLambdaIntegration(
-                id="PointlessAnalogiesAPIGWGeneratePresignedUrlIntegration",
+                id="pa-apigw-generate-presigned-url-integration",
                 handler=generate_presigned_url_function
             ),
         )
@@ -315,58 +226,11 @@ class PointlessAnalogiesStack(Stack):
             path = "/vote",
             methods = [apigw.HttpMethod.GET, apigw.HttpMethod.POST],
             integration = apigw_integrations.HttpLambdaIntegration(
-                id = "PointlessAnalogiesAPIGWVotePageIntegration",
+                id = "pa-apigw-vote-page-integration",
                 handler = vote_page_handler_function
             )
         )
         vote_page_handler_function.add_environment("API_ENDPOINT", http_api.api_endpoint)
-        # vote_page_initial_function.add_environment("API_ENDPOINT", http_api.api_endpoint)
-        # vote_page_button_function.add_environment("API_ENDPOINT", http_api.api_endpoint)
         
 
         CfnOutput(self, id="IndexApiEndpoint", value=http_api.api_endpoint)
-
-        # # Create a lambda function to add an initial image to the database
-        # initial_image = _lambda.Function(
-        #     scope = self,
-        #     id = "PointlessAnalogiesInitialImage",
-        #     function_name = "PointlessAnalogiesInitialImage",
-        #     runtime = _lambda.Runtime.PYTHON_3_11,
-        #     # Name of the function to be called by the lambda
-        #     handler = "initial_image.initial_image",
-        #     # Specify the file to take the code from
-        #     code = _lambda.Code.from_asset("lambda/"),
-        #     # Increase lambda function timeout to 30 seconds to make sure the database has time to be initialized
-        #     timeout = Duration.seconds(30)
-        # )
-
-        # # Add the name of the table to the initial_image lambda function
-        # initial_image.add_environment("TABLE_NAME", table.table_name)
-
-        # # Allow initial_image to read and write from the table
-        # table.grant_write_data(initial_image)
-        # table.grant_read_data(initial_image)
-
-        # # Create custom resource to call the lambda function that adds an initial image to the table
-        # initial_image_resource = cr.AwsCustomResource(
-        #     scope = self,
-        #     id = "PointlessAnalogiesInitialImageResource",
-        #     function_name = "PointlessAnalogiesInitialImageResourceFunction",
-        #     # Define the function to call when the stack is created
-        #     on_create = cr.AwsSdkCall(
-        #         service = "Lambda",
-        #         action = "invoke",
-        #         parameters = {
-        #             "FunctionName": initial_image.function_name,
-        #             "InvocationType": "RequestResponse",
-        #             "Payload": "{}"
-        #         },
-        #         physical_resource_id = cr.PhysicalResourceId.of("PointlessAnalogiesInitialImageResourceID")
-        #     ),
-        #     policy = cr.AwsCustomResourcePolicy.from_statements([
-        #         iam.PolicyStatement(
-        #             actions = ["lambda:InvokeFunction"],
-        #             resources = [initial_image.function_arn]
-        #         )
-        #     ])
-        # )
