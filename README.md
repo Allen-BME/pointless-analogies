@@ -7,9 +7,7 @@ Suppose someone uploads an image of their backpack and the nouns assigned to it 
 
 ## App Architecture
 
-This app uses a serverless architecture for minimal cost and easy scalability, defined in `pointless_analogies/pointless_analogies_stack.py`. The user connects to an HTTP API from AWS API Gateway which runs a lambda function depending on the route and payload. This lambda function does any necessary backend processing and then returns the correct HTML to the user. This HTML is stored as templates in an S3 bucket with placeholder values for the API endpoint, image hash, and other runtime values. When a lambda function returns HTML to the user, it gets the template from the bucket, replaces placeholder values with the correct runtime values, and then sends it to the user.
-
-There are several parts of this architecture:
+This app uses a serverless architecture for minimal cost and easy automatic scalability, defined in `pointless_analogies/pointless_analogies_stack.py`. There are several parts of this architecture:
 
 - **S3 Buckets:** There are two S3 buckets in this architecture. One holds HTML template files, which have placeholder values for things like the API endpoint or the image hash which must be known at runtime. Every file stored in `html_templates` is automatically uploaded to this bucket upon deployment. The other bucket stores images, and each time an image is uploaded to this bucket, `generate_image_hash_function` is called.
 - **HTTP API Gateway:** This is the service that allows users to connect to the app in the first place. The default endpoint calls the main page lambda function to return the correct HTML to the user for the main page. The `/vote` path calls the vote page lambda function with the image hash given in the query string parameters, returning the initial voting page for the `GET` method and submitting the payload of a vote for the `POST` method.
