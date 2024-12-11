@@ -16,10 +16,11 @@ def delete_table_item(table, key: str):
         )
     print(table_response)
 
-def lambda_handler(event, context):
+def generate_image_hash_function(event, context):
     dynamodb = boto3.resource('dynamodb')
     client = boto3.client('lambda')
     TABLE_NAME = os.environ['TABLE_NAME']
+    CATEGORIES_FUNCTION_NAME = os.environ['CATEGORIES_FUNCTION_NAME']
     table = dynamodb.Table(TABLE_NAME)
 
     # Print event for debugging
@@ -46,8 +47,8 @@ def lambda_handler(event, context):
         print(f"Created image hash {new_key} to replace {key}")
 
         response = client.invoke(
-            FunctionName='get-categories',
-            InvocationType='RequestResponse'
+            FunctionName = CATEGORIES_FUNCTION_NAME,
+            InvocationType = 'RequestResponse'
         )
 
         response_payload = json.loads(response['Payload'].read().decode('utf-8'))
