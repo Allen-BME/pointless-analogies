@@ -33,3 +33,10 @@ Security is managed by the various grant access functions provided by CDK constr
 ## Source Control
 
 There is a central repository on GitHub which was used for source control. There is extensive documentation of the source control workflow in `Git-Workflow.md`.
+
+## Group Members
+
+- Carter Allen
+- Christian Ambrosini
+- Jacob Guillemette
+- Samuel Stanley
